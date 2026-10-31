@@ -33,6 +33,8 @@
     const developerMessage = document.querySelector('#developer-secret-message');
     const developerFeedbackList = document.querySelector('#developer-feedback-list');
     const developerDeleteNotesButton = document.querySelector('#developer-delete-notes');
+    const orientationLockButton = document.querySelector('#orientation-lock-button');
+    const orientationLockError = document.querySelector('#orientation-lock-error');
 
     let mode = null;   // null | 'online' | 'ai'
     let developerContextClickTimer = null;
@@ -40,10 +42,32 @@
     let developerNotesOperation = 0;
 
     function syncOrientationPrompt() {
-        const isPortrait = window.matchMedia('(orientation: portrait)').matches;
-        const isSmallScreen = window.matchMedia('(max-width: 800px)').matches;
+        const viewportWidth = window.visualViewport?.width || window.innerWidth;
+        const viewportHeight = window.visualViewport?.height || window.innerHeight;
+        const isPortrait = viewportHeight > viewportWidth;
+        const isSmallScreen = Math.min(viewportWidth, viewportHeight) <= 800;
 
         document.body.classList.toggle('is-small-portrait', isSmallScreen && isPortrait);
+        if (!isPortrait) orientationLockError.hidden = true;
+    }
+
+    async function requestLandscapeMode() {
+        const orientation = window.screen.orientation;
+        if (!battleScreen.requestFullscreen || !orientation?.lock) {
+            orientationLockError.hidden = false;
+            return;
+        }
+
+        try {
+            if (document.fullscreenElement !== battleScreen) {
+                await battleScreen.requestFullscreen();
+            }
+            await orientation.lock('landscape');
+            orientationLockError.hidden = true;
+        } catch (error) {
+            orientationLockError.hidden = false;
+            console.warn('Could not switch the game to landscape fullscreen.', error);
+        }
     }
 
     function selectOnlineTeam(team) {
@@ -353,6 +377,7 @@
         playerName: '',
 
         showWelcome() {
+            App.exitLandscapeMode();
             if (mode === 'online') OnlineMode.exit();
             if (mode === 'ai') AIMode.exit();
             mode = null;
@@ -399,6 +424,14 @@
             show(selectionScreen, true);
         },
 
+        exitLandscapeMode() {
+            if (document.fullscreenElement === battleScreen) {
+                document.exitFullscreen().catch((error) => {
+                    console.warn('Could not exit game fullscreen.', error);
+                });
+            }
+        },
+
         enterOnline() {
             const name = readName();
             if (!name) return;
@@ -441,8 +474,11 @@
     developerCloseButton?.addEventListener('click', closeDeveloperModal);
     developerLoginButton?.addEventListener('click', loadDeveloperNotes);
     developerDeleteNotesButton?.addEventListener('click', deleteDeveloperNotes);
+    orientationLockButton?.addEventListener('click', requestLandscapeMode);
     window.addEventListener('resize', syncOrientationPrompt);
     window.addEventListener('orientationchange', syncOrientationPrompt);
+    window.visualViewport?.addEventListener('resize', syncOrientationPrompt);
+    document.addEventListener('fullscreenchange', syncOrientationPrompt);
     window.screen.orientation?.addEventListener?.('change', syncOrientationPrompt);
     syncOrientationPrompt();
     developerPasswordInput?.addEventListener('keydown', (event) => {
@@ -453,8 +489,12 @@
     });
     // اختيار القائد يبدأ مباراة الكمبيوتر مباشرة.
     const chooseComputerTeam = (team) => {
-        if (mode === 'ai') AIMode.start(team, getSelectedTurnDurationMs());
-        else selectOnlineTeam(team);
+        if (mode === 'ai') {
+            AIMode.start(team, getSelectedTurnDurationMs());
+            requestLandscapeMode();
+        } else {
+            selectOnlineTeam(team);
+        }
     };
     pickLight.addEventListener('click', () => chooseComputerTeam('light'));
     pickDark.addEventListener('click', () => chooseComputerTeam('dark'));
