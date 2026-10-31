@@ -1845,6 +1845,7 @@ function showBattleScreen(team, startsWithPlayer = true, turnDurationMs = getSel
 function showSelectionScreen() {
     clearPlayerTurnTimer();
     window.clearTimeout(victoryTimer);
+    if (window.App?.exitLandscapeMode) App.exitLandscapeMode();
     victoryModal.classList.add('screen-hidden');
     victoryModal.setAttribute('aria-hidden', 'true');
     if (activeMode && activeMode.leaveMatch) activeMode.leaveMatch();
