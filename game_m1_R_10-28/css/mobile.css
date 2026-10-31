@@ -1,0 +1,1006 @@
+/* =============================================================================
+   تكييف اللعبة للهواتف والأجهزة اللوحية الصغيرة
+   يُحمَّل بعد main.css و welcome.css فيتفوّق عليهما عند التعارض.
+   الفكرة: بدل الأزرار العائمة المبعثرة نجمع البنك والحظ واليد وإنهاء الدور
+   في "شريط سفلي" ثابت، ونحوّل سوق البنك والمقبرة إلى لوحتين
+   منزلقتين بملء الشاشة بدل لوحات جانبية صغيرة. هذا الملف لا يغيّر أي منطق
+   لعب، فقط مواضع ومقاسات العناصر الموجودة أصلاً.
+   ============================================================================= */
+
+.battle-news-controls,
+#battle-news-reopen {
+    display: none;
+}
+
+@media (max-width: 640px), (max-height: 480px) and (orientation: landscape) {
+.tutorial-modal {
+    align-items: flex-start;
+    overflow-y: auto;
+    padding: 8px;
+}
+
+.tutorial-window {
+    gap: 10px;
+    width: 100%;
+    max-height: none;
+    margin: auto 0;
+    padding: 12px;
+}
+
+.tutorial-scoreboard {
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.tutorial-team {
+    flex: 1 1 34%;
+    min-width: 0;
+    gap: 4px 7px;
+    padding: 8px;
+}
+
+.tutorial-round {
+    order: -1;
+    flex: 1 1 100%;
+    grid-template-columns: auto auto 1fr;
+    justify-items: center;
+    min-width: 0;
+}
+
+.tutorial-round strong { font-size: 18px; }
+.tutorial-board { gap: 12px; min-height: 190px; padding: 10px 5px; }
+.tutorial-card-row { grid-template-columns: repeat(4, minmax(0, 56px)); gap: 5px; }
+.tutorial-slot { max-height: 88px; }
+.tutorial-card-name { font-size: 7px; }
+.tutorial-card small { font-size: 7px; }
+.tutorial-card-cost { font-size: 7px; }
+.tutorial-card-blocked { top: 2px; left: 2px; width: 16px; height: 16px; font-size: 10px; }
+.tutorial-market { right: 4px; bottom: 4px; gap: 5px; padding: 5px; font-size: 9px; }
+.tutorial-market-card { gap: 3px; }
+.tutorial-market-card img { width: 20px; height: 28px; }
+.tutorial-market-card strong { max-width: 72px; }
+.tutorial-caption { min-height: 0; padding: 11px; }
+.tutorial-caption h3 { font-size: 18px; }
+.tutorial-caption p { font-size: 13px; }
+.tutorial-controls { flex-wrap: wrap; gap: 6px; }
+.tutorial-control-main { gap: 6px; }
+.tutorial-controls button { min-height: 38px; padding: 7px 10px; font-size: 11px; }
+}
+
+@media (max-width: 380px) {
+    .tutorial-header p { max-width: 230px; }
+    .tutorial-team span { font-size: 9px; }
+    .tutorial-card-row { grid-template-columns: repeat(4, minmax(0, 48px)); }
+    .tutorial-controls button { padding-inline: 7px; }
+}
+
+/* يشمل: كل هاتف بوضع عمودي تقريباً (عرض ≤ 640px)، وأي هاتف بوضع أفقي (ارتفاع قصير) */
+@media (max-width: 640px), (max-height: 480px) and (orientation: landscape) {
+
+    /* ------------------------------------------------------------ عام */
+    html, body { overflow-x: hidden; }
+    .battle-screen { padding-bottom: calc(60px + 24vh); }   /* مساحة إضافية للتمرير فوق الشريط السفلي الثابت + مربع الأحداث */
+    .feedback-trigger {
+        left: 6px;
+        top: 50px;
+        height: 32px;
+        min-height: 32px;
+        padding: 5px 9px;
+        font-size: 11px;
+    }
+    [dir="rtl"] .feedback-trigger {
+        left: 6px;
+        right: auto;
+    }
+    .feedback-actions {
+        flex-wrap: wrap;
+    }
+
+    /* طبقات تفاعل واضحة لمنع تغطية الأزرار بأغلفة الهاتف أو بطاقات الخلفية */
+    .selection-screen .bottom-hand,
+    .selection-screen .factions-container,
+    .selection-screen .online-player-item button,
+    .bank-toggle,
+    .lottery-toggle,
+    .hand-toggle,
+    #end-turn-button,
+    .battle-graveyard,
+    .graveyard-toggle,
+    .battle-news {
+        position: relative;
+        z-index: 20;
+        pointer-events: auto;
+    }
+
+    .battle-news { z-index: 15; }
+    .selection-screen .online-lobby { z-index: 70; }
+    .bank-toggle,
+    .lottery-toggle,
+    .hand-toggle,
+    #end-turn-button,
+    .battle-graveyard,
+    .graveyard-toggle {
+        z-index: 40;
+    }
+
+    /* زر تبديل اللغة للهاتف */
+    .language-toggle {
+        top: 5px;
+        right: 5px;
+        padding: 6px 12px;
+        font-size: 12px;
+        border-radius: 6px;
+    }
+    [dir="rtl"] .language-toggle {
+        right: auto;
+        left: 5px;
+    }
+
+    /* ------------------------------------------------------------ الترويسة وبطاقتا اللاعبَين */
+    .battle-header {
+        height: auto;
+        min-height: 48px;
+        grid-template-columns: 1fr auto 1fr;
+        gap: 2px;
+        padding: 2px 2px;
+    }
+    .player-banner { min-height: 0; padding: 2px 4px; gap: 4px; border-radius: 6px; border-top: 2px solid var(--gold-dark); }
+    .light-banner { border-radius: 6px 0 0 6px; }
+    .dark-banner { border-radius: 0 6px 6px 0; }
+    .player-portrait { width: 26px; height: 26px; border-width: 2px; }
+    .player-banner h1 { font-size: 11px; line-height: 1.0; }
+    .player-banner p { display: none; }             /* اسم الشخصية الفرعي: غير ضروري على شاشة صغيرة */
+    .player-stats { gap: 4px; margin-top: 0; font-size: 9px; }
+    .turn-indicator { min-width: 0; margin-top: 0; padding: 2px 4px; border-radius: 0 0 6px 6px; font-size: 8px; line-height: 1.1; }
+    .turn-timer { margin-top: 2px; font-size: 9px; }
+
+    /* ------------------------------------------------------------ ساحة المعركة */
+    .battle-arena { width: 100vw; height: auto; padding: 1px 1px; gap: 1px; }
+    .battlefield-row { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; }
+    .empty-slot { min-height: 0; width: auto; height: auto; aspect-ratio: 3 / 4; border-width: 2px; }
+    .leader-slot { display: none; } /* إخفاء خانات القادة في الهاتف */
+    .arena-title { padding: 1px 6px; font-size: 9px; }
+    .card-info-button { width: 32px; height: 32px; font-size: 16px; top: 1px; right: 1px; }
+    .card-attack-button, .card-silence-button { bottom: auto; }
+    .card-attack-button { bottom: 60px; font-size: 12px; padding: 4px; }
+    .card-silence-button { bottom: 1px; font-size: 11px; padding: 4px; }
+    .deployed-card-name { bottom: 44px; font-size: 12px; }
+    .deployed-card-stats { min-height: 24px; padding: 5px 7px; font-size: 12px; }
+    .deployed-card-image { width: 100%; height: 100%; object-fit: contain; }
+
+    /* ------------------------------------------------------------ يد الكروت: شريط أفقي قابل للتمرير فوق الشريط السفلي */
+    .battle-hand {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 72px;
+        z-index: 14;
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        padding: 6px 8px;
+        gap: 6px;
+        overflow-x: auto;
+        overflow-y: visible;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x proximity;
+        background: linear-gradient(180deg, transparent, rgba(3, 8, 13, .82) 30%);
+        justify-content: flex-start;
+        display: none; /* إخفاء يد الكروت الأصلية في الهاتف */
+    }
+    .battle-hand.is-fanned { z-index: 16; }
+    .battle-card { width: 64px; height: 96px; padding-bottom: 22px; scroll-snap-align: start; flex: 0 0 auto; }
+    .battle-card h2 { bottom: 12px; font-size: 7px; }
+    .battle-card .card-info-button { width: 20px; height: 20px; font-size: 12px; }
+
+    /* اختيار الكرت باللمس: مساحة إضافية فوقه ليبقى ظاهراً داخل الشريط القابل للتمرير */
+    .battle-card.selected-for-drop { transform: translateY(-10px); }
+
+    /* ------------------------------------------------------------ شريط التحكم السفلي */
+    .battle-toolbar {
+        position: fixed;
+        top: auto;
+        right: 2px;
+        bottom: 2px;
+        left: 52px;
+        z-index: 40;
+        display: flex;
+        justify-content: space-between;
+        gap: 3px;
+        padding: 3px;
+        border-radius: 9px;
+    }
+    .battle-toolbar .bank-toggle,
+    .battle-toolbar .lottery-toggle {
+        position: static;
+        flex: 0 1 42px;
+        width: 42px;
+        height: 46px;
+        min-width: 0;
+        padding: 2px;
+        font-size: 6px;
+    }
+    .battle-toolbar .bank-toggle img { width: 18px; height: 18px; margin-bottom: 1px; }
+    .battle-toolbar .bank-toggle span { font-size: 6px; }
+    .battle-toolbar .lottery-toggle img { width: 16px; height: 16px; }
+    .battle-toolbar .lottery-toggle small { font-size: 6px; }
+    .battle-toolbar .bank-exchange-actions { gap: 2px; }
+    .battle-toolbar .bank-exchange-actions .gold-to-health-button {
+        flex-basis: 54px;
+        width: 54px;
+        height: 46px;
+        padding: 2px;
+        border-radius: 6px;
+        font-size: 6px;
+    }
+    .battle-toolbar .bank-exchange-actions .gold-to-health-button small { margin-top: 2px; font-size: 6px; }
+    .battle-toolbar .hand-toggle {
+        position: static;
+        flex: 1 1 74px;
+        display: flex !important; /* إظهار زر كروت اليد في الهاتف */
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        padding: 4px 6px;
+        width: auto;
+        height: 46px;
+        min-width: 64px;
+        min-height: 0;
+        max-width: none;
+    }
+    .hand-toggle-label {
+        display: block;
+        color: var(--gold-light);
+        font-size: 8px;
+        line-height: 1.1;
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    .battle-toolbar #end-turn-button {
+        position: static;
+        flex: 1 1 100px;
+        left: auto;
+        top: auto;
+        bottom: auto;
+        z-index: auto;
+        width: auto;
+        min-width: 86px;
+        height: 46px;
+        margin: 0;
+        padding: 0 7px;
+        border-radius: 6px;
+        font-size: clamp(8px, 2.5vw, 11px);
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        line-height: 1;
+        white-space: nowrap;
+        overflow: hidden;
+    }
+
+    /* ------------------------------------------------------------ لوحة المقبرة: أيقونة عائمة تفتح لوحة منزلقة من الأسفل */
+    .battle-graveyard {
+        position: fixed;
+        top: auto;
+        left: 2px;
+        bottom: 2px;
+        z-index: 30;
+        width: 46px;
+        height: 46px;
+        padding: 0;
+        border: none;
+        background: transparent;
+        box-shadow: none;
+        overflow: visible;
+    }
+    .graveyard-toggle,
+    .graveyard-toggle-count,
+    .battle-graveyard h2,
+    .battle-graveyard-slots,
+    .battle-graveyard.graveyard-open .graveyard-toggle,
+    .battle-graveyard.graveyard-open .battle-graveyard-slots,
+    .battle-graveyard.graveyard-open .battle-graveyard-slots::before {
+        display: none !important;
+    }
+
+    /* ------------------------------------------------------------ سوق البنك: لوحة جانبية بنصف عرض الشاشة */
+    .battle-shop {
+        top: 2vh;
+        right: 0;
+        bottom: auto;
+        left: auto;
+        width: 50vw;
+        max-width: 50vw;
+        height: 89vh;
+        min-height: 0;
+        padding: 6px 4px 8px;
+        overflow-y: auto;
+        z-index: 1000;
+    }
+    .battle-shop-header { position: relative; font-size: 11px; }
+    .shop-choices { gap: 2px; margin: 4px 0; }
+    .battle-shop .shop-choice { min-height: 30px; padding: 2px 1px; font-size: 8px; }
+    .shop-close {
+        display: flex;
+        position: absolute;
+        top: -4px;
+        left: 0;
+        font-size: 9px;
+    }
+    .graveyard-shop-title { margin-top: 6px; font-size: 10px; }
+    .graveyard-bank-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; }
+
+    .battle-shop .bank-card {
+        position: relative;
+        width: 100%;
+        height: auto;
+        margin: 0 auto;
+        padding: 0;
+        overflow: hidden;
+        display: block;
+    }
+
+    .battle-shop .bank-card img {
+        position: static;
+        display: block;
+        width: 100%;
+        height: auto;
+        aspect-ratio: auto;
+        object-fit: contain;
+        background: #05090e;
+    }
+
+    .battle-shop .bank-card span,
+    .battle-shop .bank-card small {
+        position: absolute;
+        right: 0;
+        left: 0;
+        z-index: 1;
+        margin: 0;
+        padding: 1px;
+        background: rgba(3, 8, 13, .88);
+        text-align: center;
+    }
+
+    .battle-shop .bank-card span {
+        bottom: 13px;
+        font-size: 7px;
+    }
+
+    .battle-shop .bank-card small {
+        bottom: 0;
+        font-size: 7px;
+    }
+
+    /* ------------------------------------------------------------ شريط الأخبار: أصغر ولا يزاحم الساحة */
+    .battle-news {
+        position: fixed;
+        bottom: 60px;
+        left: 0;
+        right: 0;
+        margin: 0;
+        height: 24vh;
+        min-height: 0;
+        padding: 6px 8px;
+        font-size: 11px;
+        background: linear-gradient(180deg, rgba(25,29,52,.94), rgba(12,14,28,.98));
+        border-top: 2px solid #f5b83d;
+        z-index: 15;
+        overflow: hidden;
+        transition: height .2s ease, max-height .2s ease;
+    }
+    .battle-news-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 4px;
+        margin-bottom: 3px;
+    }
+    .battle-news strong { font-size: 12px; }
+    .battle-news-count { font-size: 10px; }
+    .battle-news-controls {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+    }
+    .battle-news-controls button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 26px;
+        margin: 0;
+        padding: 0;
+        border: 1px solid rgba(245, 184, 61, .6);
+        border-radius: 5px;
+        color: #f5b83d;
+        background: rgba(3, 8, 13, .8);
+        font: inherit;
+        font-size: 16px;
+        line-height: 1;
+        cursor: pointer;
+        touch-action: manipulation;
+    }
+    .battle-news-controls button[hidden],
+    #battle-news-reopen[hidden] {
+        display: none;
+    }
+    .battle-news.is-expanded {
+        position: fixed;
+        left: 50%;
+        right: auto;
+        top: 50%;
+        bottom: auto;
+        width: min(60vw, 420px);
+        max-width: 60vw;
+        min-width: 260px;
+        height: min(45dvh, 420px);
+        max-height: calc(100dvh - 80px);
+        min-height: 120px;
+        margin: 0;
+        transform: translate(-50%, -50%);
+        z-index: 120;
+        border-radius: 12px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.55);
+        padding: 12px 14px;
+        font-size: 14px;
+        line-height: 1.45;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .battle-news.is-expanded .battle-news-header {
+        margin-bottom: 8px;
+    }
+    .battle-news.is-expanded strong {
+        font-size: 18px;
+    }
+    .battle-news.is-expanded .news-content,
+    .battle-news.is-expanded .news-empty {
+        font-size: clamp(14px, 2.4vw, 18px);
+        line-height: 1.5;
+        text-align: center;
+        width: 100%;
+    }
+    .battle-news.is-expanded .news-ticker {
+        display: block;
+        width: 100%;
+        max-height: none;
+    }
+    .battle-news.is-collapsed {
+        height: 44px;
+        max-height: 44px;
+        min-height: 44px;
+        padding-top: 4px;
+        padding-bottom: 4px;
+    }
+    .battle-news.is-collapsed .battle-news-header { margin-bottom: 0; }
+    .battle-news.is-collapsed .news-ticker { display: none; }
+    .battle-news.is-hidden { display: none; }
+    #battle-news-reopen {
+        position: fixed;
+        right: 8px;
+        bottom: 60px;
+        z-index: 15;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        min-height: 36px;
+        padding: 5px 10px;
+        border: 1px solid #f5b83d;
+        border-radius: 8px;
+        color: #f5b83d;
+        background: rgba(12, 14, 28, .96);
+        font: inherit;
+        font-size: 11px;
+        cursor: pointer;
+        touch-action: manipulation;
+    }
+    .battle-news .news-content { font-size: 12px; line-height: 1.35; padding: 4px 8px; }
+    .battle-news .news-empty { font-size: 11px; padding: 4px 8px; }
+    .battle-news .news-ticker { max-height: none; }
+
+    @media (min-width: 641px) and (orientation: landscape) {
+        .battle-hand { bottom: calc(24vh + 72px); }
+    }
+
+    /* ------------------------------------------------------------ زر الرجوع ودليل اللعبة */
+    .battle-back-button { top: 6px; left: 6px; width: 36px; height: 36px; font-size: 20px; }
+
+    /* ------------------------------------------------------------ النوافذ المنبثقة */
+    .attack-modal, .silence-modal, .card-info-modal,
+    .turn-confirm-modal, .emergency-sacrifice-modal, .insufficient-gold-modal, .victory-modal {
+        padding: 12px;
+    }
+    .attack-targets { grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 8px; }
+    .card-info-content { flex-direction: column; align-items: center; text-align: center; gap: 14px; }
+    #card-info-image { width: 130px; height: auto; }
+    .victory-panel { width: 92vw; height: auto; max-height: 88vh; overflow-y: auto; }
+
+    /* ------------------------------------------------------------ نافذة كروت اليد (80% من الشاشة) */
+    .hand-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.85);
+        padding: 10px;
+    }
+    .hand-modal-panel {
+        width: 68%;
+        max-width: 68%;
+        height: 95%;
+        max-height: 95%;
+        background: linear-gradient(180deg, rgba(10, 15, 25, 0.98), rgba(3, 8, 13, 0.98));
+        border: 2px solid rgba(212, 175, 55, 0.6);
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    .hand-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 12px;
+        border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+        background: rgba(212, 175, 55, 0.1);
+    }
+    .hand-modal-header h2 {
+        margin: 0;
+        color: var(--gold-light);
+        font-size: 16px;
+        font-weight: bold;
+    }
+    .hand-modal-close {
+        width: 36px;
+        height: 36px;
+        border: 2px solid rgba(212, 175, 55, 0.6);
+        border-radius: 50%;
+        background: rgba(4, 11, 16, 0.9);
+        color: var(--gold-light);
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+    .hand-modal-close:hover {
+        background: rgba(212, 175, 55, 0.3);
+        transform: scale(1.1);
+    }
+    .hand-modal-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 12px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 12px;
+        -webkit-overflow-scrolling: touch;
+    }
+    .hand-modal-content .battle-card {
+        width: 100%;
+        height: auto;
+        min-height: 220px;
+        padding: 10px;
+        scroll-snap-align: none;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .hand-modal-content .battle-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(212, 175, 55, 0.3);
+    }
+    .hand-modal-content .battle-card img {
+        width: 100%;
+        height: auto;
+        max-height: 160px;
+        object-fit: contain;
+    }
+    .hand-modal-content .battle-card h2 {
+        font-size: 15px;
+        bottom: 32px;
+    }
+    .hand-modal-content .battle-card .card-values {
+        font-size: 13px;
+    }
+    .hand-modal-content .battle-card .card-cost {
+        font-size: 15px;
+    }
+
+    /* ------------------------------------------------------------ شاشة اختيار الفريق (تحدي الكمبيوتر) وقائمة اللاعبين (تحدي ناس حقيقيين) */
+    .game-container { height: 100dvh; grid-template-rows: 48px minmax(0, 1fr) 0; overflow-y: auto; }
+    .selection-screen { grid-template-rows: auto minmax(0, 1fr) 0; }
+    .selection-screen .bottom-hand { display: flex; position: fixed; left: 0; right: 0; bottom: 10px; z-index: 120; padding: 0; pointer-events: none; }
+    .selection-screen .bottom-hand .cards-deck,
+    .selection-screen .sidebar { display: none; }   /* إخفاء العناصر الزخرفية مع إبقاء زر التحدي متاحًا */
+    .selection-screen .factions-container { position: relative; z-index: 10; }
+    .central-emblem { top: 30%; width: 70px; }
+    .factions-container { gap: 10px; padding: 8px 6px; }
+    .portrait-wrapper { width: 58px; height: 58px; margin-bottom: 6px; border-width: 2px; }
+    .faction-info h2 { font-size: 15px; }
+    .faction-info .subtitle { font-size: 10px; margin-bottom: 4px; }
+    .faction-info .description { padding: 6px 8px; margin-bottom: 6px; font-size: 10px; line-height: 1.35; }
+    .cta-button { top: 0; padding: 7px 14px; font-size: 12px; }
+    .selection-screen .online-lobby {
+        position: fixed;
+        top: auto;
+        right: auto;
+        bottom: calc(64px + env(safe-area-inset-bottom));
+        left: 50%;
+        width: min(92vw, 420px);
+        height: min(30dvh, 220px);
+        min-height: 140px;
+        max-height: min(38dvh, 260px);
+        padding: 10px 12px;
+        transform: translateX(-50%);
+        overflow: hidden;
+    }
+    .selection-screen .online-lobby-header {
+        flex: 0 0 auto;
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+    .selection-screen .online-lobby-header h2 {
+        min-width: 0;
+        font-size: 16px;
+    }
+    .selection-screen .online-player-list {
+        flex: 1 1 auto;
+        min-height: 0;
+        max-height: none;
+        align-content: flex-start;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+}
+
+@media (max-width: 640px), (max-height: 500px) and (orientation: landscape) {
+    .bank-cards {
+        flex: 0 1 auto;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        justify-content: center;
+        align-content: start;
+        gap: 8px;
+    }
+
+    .battle-shop .bank-cards .bank-card {
+        position: relative;
+        width: 100%;
+        height: auto;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        display: block;
+    }
+
+    .battle-shop .bank-cards .bank-card img {
+        position: static;
+        display: block;
+        width: 100%;
+        height: auto;
+        aspect-ratio: auto;
+        object-fit: contain;
+        background: #05090e;
+    }
+
+    .battle-shop .bank-cards .bank-card span,
+    .battle-shop .bank-cards .bank-card small {
+        position: absolute;
+        right: 0;
+        left: 0;
+        z-index: 1;
+        margin: 0;
+        padding: 2px;
+        background: rgba(3, 8, 13, .9);
+        text-align: center;
+    }
+
+    .battle-shop .bank-cards .bank-card span {
+        bottom: 17px;
+        font-size: 8px;
+    }
+
+    .battle-shop .bank-cards .bank-card small {
+        bottom: 0;
+        font-size: 8px;
+    }
+}
+
+/* هواتف صغيرة جداً: مزيد من التقليص */
+@media (max-width: 380px) {
+    .battle-card { width: 56px; height: 86px; }
+    .battle-toolbar .bank-toggle,
+    .battle-toolbar .lottery-toggle,
+    .graveyard-toggle,
+    .battle-graveyard { width: 42px; height: 42px; }
+    .battle-toolbar .hand-toggle { min-width: 56px; }
+    .battle-toolbar #end-turn-button { min-width: 78px; height: 42px; font-size: 7px; }
+    .card-info-button { width: 28px; height: 28px; font-size: 14px; }
+    .card-attack-button { bottom: 60px; font-size: 10px; }
+    .deployed-card-name { bottom: 44px; font-size: 10px; }
+    .deployed-card-stats { font-size: 10px; }
+    .battle-header { min-height: 42px; padding: 2px 2px; }
+    .player-portrait { width: 24px; height: 24px; }
+    .player-banner h1 { font-size: 10px; }
+    .player-stats { font-size: 8px; }
+    .turn-indicator { font-size: 7px; padding: 2px 3px; }
+    .battle-screen { padding-bottom: calc(52px + 24vh); }
+    .battle-news { bottom: 52px; height: 24vh; }
+}
+
+/* تصغير قائمة البنك فقط للشاشات الصغيرة */
+@media (max-width: 400px) {
+    .battle-shop {
+        padding: 6px 4px 8px;
+    }
+    .battle-shop-header { font-size: 11px; }
+    .shop-choices { gap: 2px; margin: 4px 0; }
+    .battle-shop .shop-choice { min-height: 30px; padding: 2px 1px; font-size: 8px; }
+    .shop-close { font-size: 9px; }
+
+    .battle-shop .bank-card span { font-size: 6px; }
+    .battle-shop .bank-card small { font-size: 5px; }
+
+    .graveyard-shop-title { font-size: 10px; margin-top: 6px; }
+    .graveyard-bank-cards { gap: 2px !important; }
+}
+
+/* شاشات اللمس عموماً (بغض النظر عن العرض): تكبير مساحة اللمس قليلاً لأزرار الهجوم/المعالجة/المنع */
+@media (hover: none) and (pointer: coarse) {
+    .card-attack-button, .card-silence-button { padding-top: 4px; padding-bottom: 4px; }
+    .card-info-button { width: 30px; height: 30px; }
+}
+
+@media (max-width: 900px), (max-height: 600px) and (orientation: landscape) {
+    #battle-screen .battle-news.is-expanded {
+        position: fixed;
+        top: 50%;
+        right: auto;
+        bottom: auto;
+        left: 50%;
+        width: 60vw;
+        height: 60vh;
+        height: 60dvh;
+        min-height: 0;
+        max-height: 60dvh;
+        margin: 0;
+        padding: 12px;
+        box-sizing: border-box;
+        border: 2px solid #f5b83d;
+        border-radius: 12px;
+        transform: translate(-50%, -50%);
+        z-index: 100;
+    }
+    #battle-screen .battle-news.is-expanded strong { font-size: 17px; }
+    #battle-screen .battle-news.is-expanded .news-ticker { max-height: none; }
+    #battle-screen .battle-news.is-expanded .news-content {
+        padding: 7px 10px;
+        font-size: clamp(16px, 4vw, 20px);
+        line-height: 1.5;
+    }
+    #battle-screen .battle-news.is-expanded .news-empty {
+        padding: 7px 10px;
+        font-size: clamp(15px, 3.8vw, 19px);
+        line-height: 1.5;
+    }
+}
+
+.orientation-prompt {
+    display: none;
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .battlefield-row .occupied-slot.is-touch-preview {
+        position: relative;
+        z-index: 18;
+        transform: scale(1.3);
+        transform-origin: center;
+        box-shadow: 0 0 18px rgba(212, 175, 55, .7);
+    }
+}
+
+.is-small-portrait .orientation-prompt {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: rgba(3, 8, 13, .97);
+    text-align: center;
+}
+
+.orientation-prompt-panel {
+    display: grid;
+    justify-items: center;
+    gap: 16px;
+    max-width: 300px;
+    padding: 28px 24px;
+    border: 2px solid var(--gold-primary);
+    border-radius: 14px;
+    background: linear-gradient(145deg, rgba(20, 28, 35, .98), rgba(4, 10, 15, .98));
+    box-shadow: 0 0 28px rgba(212, 175, 55, .25);
+    color: var(--gold-light);
+    font-size: 20px;
+}
+
+.orientation-prompt-icon {
+    color: var(--gold-primary);
+    font-family: sans-serif;
+    font-size: 52px;
+    line-height: 1;
+}
+
+html[lang="ar"] .orientation-prompt [lang="en"],
+html[lang="en"] .orientation-prompt [lang="ar"] {
+    display: none;
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+    .battle-screen { overflow: hidden; padding-bottom: 0; }
+    .battle-header {
+        height: 46px;
+        min-height: 46px;
+        grid-template-columns: 1fr auto 1fr;
+        padding: 0 54px;
+    }
+    .player-banner { min-height: 42px; padding: 2px 6px; gap: 6px; }
+    .player-portrait { width: 34px; height: 34px; }
+    .player-banner h1 { font-size: 12px; }
+    .player-stats { gap: 6px; margin-top: 1px; font-size: 10px; }
+    .turn-indicator { min-width: 100px; margin: 0; padding: 4px 8px; border-radius: 0 0 8px 8px; font-size: 11px; }
+    .turn-timer { margin-top: 2px; font-size: 10px; }
+
+    .battle-arena {
+        width: min(100vw, 820px);
+        min-height: 0;
+        height: calc(100dvh - 46px);
+        justify-content: space-evenly;
+        gap: 2px;
+        padding: 4px 8px 70px;
+    }
+    .battlefield-row { width: min(100%, 560px); gap: 8px; }
+    .battlefield-row .occupied-slot .deployed-card-image { transform: scale(1.2); }
+    .empty-slot {
+        min-height: 0;
+        width: auto;
+        height: clamp(72.72px, 25.25vh, 109.08px);
+        aspect-ratio: 0.7574 / 1;
+        transform: scale(1.02, 1.01);
+    }
+    .arena-title { padding: 2px 18px; font-size: 12px; }
+    .deployed-card-name { bottom: 18px; padding: 2px; font-size: 8px; }
+    .deployed-card-stats { min-height: 18px; padding: 1px 2px; font-size: 8px; }
+    .card-attack-button { bottom: 26px; padding: 1px; font-size: 8px; }
+    .card-silence-button { bottom: 1px; padding: 1px; font-size: 7px; }
+    .card-info-button { top: 2px; right: 2px; width: 20px; height: 20px; font-size: 12px; }
+
+    .battle-toolbar {
+        right: 4px;
+        bottom: 4px;
+        left: auto;
+        gap: 4px;
+        padding: 3px;
+    }
+    .battle-toolbar .bank-toggle,
+    .battle-toolbar .lottery-toggle { flex-basis: 42px; width: 42px; height: 42px; }
+    .battle-toolbar .bank-toggle img { width: 17px; height: 17px; }
+    .battle-toolbar .lottery-toggle img { width: 16px; height: 16px; }
+    .battle-toolbar .bank-toggle span { font-size: 6px; }
+    .battle-toolbar .lottery-toggle small { font-size: 6px; }
+    .battle-toolbar .bank-exchange-actions { gap: 2px; }
+    .battle-toolbar .bank-exchange-actions .gold-to-health-button {
+        flex-basis: 52px;
+        width: 52px;
+        height: 42px;
+        padding: 2px;
+        border-radius: 6px;
+        font-size: 6px;
+    }
+    .battle-toolbar .bank-exchange-actions .gold-to-health-button small { margin-top: 2px; font-size: 6px; }
+    .battle-toolbar .hand-toggle { flex-basis: 56px; width: 56px; height: 40px; min-width: 56px; }
+    .battle-toolbar .hand-toggle-label { font-size: 8px; }
+    .battle-toolbar #end-turn-button { flex-basis: 86px; width: 86px; min-width: 86px; height: 40px; padding: 0 4px; font-size: 9px; }
+
+    .battle-graveyard { top: 52px; left: 4px; width: 42px; padding: 0; border: 0; background: transparent; box-shadow: none; }
+    .graveyard-toggle { display: flex; width: 42px; height: 42px; }
+    .battle-graveyard h2,
+    .battle-graveyard-slots { display: none; }
+    .battle-news {
+        right: 372px;
+        bottom: 4px;
+        left:45px;
+        width: auto;
+        height: 52px;
+        min-height: 52px;
+        max-height: 52px;
+        margin: 2px;
+        padding: 4px 9px;
+    }
+    .battle-news-header { margin-bottom: 1px; }
+    .battle-news strong { font-size: 11px; }
+    .battle-news-count { font-size: 9px; }
+    .battle-news .news-content,
+    .battle-news .news-empty { padding: 2px 5px; font-size: 10px; line-height: 1.2; }
+    .battle-news .news-ticker { max-height: 27px; }
+}
+@media (max-width: 640px), (max-height: 500px) and (orientation: landscape) {
+    .shop-inventory {
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .bank-cards {
+        display: grid;
+        flex: 1 1 0;
+        grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+        grid-auto-flow: row;
+        grid-auto-rows: max-content;
+        align-content: start;
+        align-items: stretch;
+        gap: 6px;
+        height: auto;
+        min-height: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+        box-sizing: border-box;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .bank-cards > .bank-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: auto;
+        min-width: 0;
+        min-height: 0;
+        margin: 0;
+        padding: 4px;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+
+    .bank-cards > .bank-card img {
+        display: block;
+        position: static;
+        width: 100%;
+        height: clamp(56px, 20vh, 96px);
+        flex: 0 0 auto;
+        object-fit: contain;
+        margin: 0 auto;
+    }
+
+    .bank-cards > .bank-card span,
+    .bank-cards > .bank-card small {
+        position: static;
+        display: block;
+        width: 100%;
+        margin: 2px 0 0;
+        padding: 0;
+        text-align: center;
+    }
+
+    .bank-cards > .bank-card span {
+        font-size: 8px;
+    }
+
+    .bank-cards > .bank-card small {
+        font-size: 8px;
+    }
+
+    .bank-cards > .bank-card[hidden] {
+        display: none !important;
+    }
+}
