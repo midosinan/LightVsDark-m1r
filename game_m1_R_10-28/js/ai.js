@@ -176,7 +176,9 @@
         const neighborSlot = computerDropSlots[neighborIndex];
         const targetSlot = playerDropSlots[targetIndex];
         if (!neighborSlot || !targetSlot || battlePhase < 2 || neighborSlot.dataset.cardName !== 'silent-neighbor' || neighborSlot.dataset.attackUsed === 'true') return false;
-        if (!targetSlot.classList.contains('occupied-slot') || isSlotBlocked(targetSlot)) return false;
+        if (!targetSlot.classList.contains('occupied-slot')
+            || targetSlot.dataset.cardName === 'light-healer'
+            || isSlotBlocked(targetSlot)) return false;
         const key = getBlockKey(targetSlot);
 
         // تحديد مدة المنع بناءً على من يبدأ الجولة

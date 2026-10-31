@@ -53,14 +53,15 @@
 
     async function requestLandscapeMode() {
         const orientation = window.screen.orientation;
-        if (!battleScreen.requestFullscreen || !orientation?.lock) {
+        const fullscreenElement = document.documentElement;
+        if (!fullscreenElement.requestFullscreen || !orientation?.lock) {
             orientationLockError.hidden = false;
             return;
         }
 
         try {
-            if (document.fullscreenElement !== battleScreen) {
-                await battleScreen.requestFullscreen();
+            if (document.fullscreenElement !== fullscreenElement) {
+                await fullscreenElement.requestFullscreen();
             }
             await orientation.lock('landscape');
             orientationLockError.hidden = true;
@@ -425,7 +426,7 @@
         },
 
         exitLandscapeMode() {
-            if (document.fullscreenElement === battleScreen) {
+            if (document.fullscreenElement === document.documentElement) {
                 document.exitFullscreen().catch((error) => {
                     console.warn('Could not exit game fullscreen.', error);
                 });

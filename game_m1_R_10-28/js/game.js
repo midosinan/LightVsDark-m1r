@@ -1874,13 +1874,15 @@ function hideAttackModal() {
 
 function showSilenceModal(silentNeighborSlot) {
     const opponentCards = [...battleArena.querySelectorAll('.computer-slot.occupied-slot')];
+    const blockableCards = opponentCards
+        .filter((slot) => slot.dataset.cardName !== 'light-healer');
 
     if (opponentCards.length === 0) {
         updateBattleNews(battleText('news.noOpponentCards', 'There are no opponent cards on the battlefield.'));
         return;
     }
 
-    silenceTargets.innerHTML = opponentCards.map((slot) => {
+    silenceTargets.innerHTML = blockableCards.map((slot) => {
         const cardImage = slot.querySelector('.deployed-card-image');
         const cardName = slot.querySelector('.deployed-card-name')?.textContent || 'كرت الخصم';
         const isAlreadyBlocked = isSlotBlocked(slot);
@@ -1941,7 +1943,8 @@ function executeSilence(targetSlotIndex) {
     const silentNeighborSlot = [...playerDropSlots].find((slot) => slot.dataset.slotIndex === silentNeighborSlotIndex);
     const targetSlot = [...computerDropSlots].find((slot) => slot.dataset.slotIndex === targetSlotIndex);
 
-    if (!silentNeighborSlot || !targetSlot || !silentNeighborSlot.classList.contains('occupied-slot') || !targetSlot.classList.contains('occupied-slot')) {
+    if (!silentNeighborSlot || !targetSlot || !silentNeighborSlot.classList.contains('occupied-slot')
+        || !targetSlot.classList.contains('occupied-slot') || targetSlot.dataset.cardName === 'light-healer') {
         hideSilenceModal();
         return;
     }

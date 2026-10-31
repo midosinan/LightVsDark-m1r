@@ -174,7 +174,8 @@
         }
         silence(t, ni, tj) {
             const N = this.T[t].board[ni]; const D = this.T[opp(t)].board[tj];
-            if (this.over || !N || N.def.key !== 'silent' || this.phase < 2 || N.used || !D || D.blocked) return false;
+            if (this.over || !N || N.def.key !== 'silent' || this.phase < 2 || N.used
+                || !D || D.def.key === 'healer' || D.blocked) return false;
             D.blocked = true; this.silenced++; this.acted = true; return true;
         }
         applyAct(t, a) {
@@ -315,7 +316,7 @@
                 }
             }
             const ni = T.board.findIndex((c) => c && c.def.key === 'silent' && !c.used);
-            if (ni >= 0 && g.phase >= 2) O.board.forEach((D, j) => { if (D && !D.blocked && D.atk > 0) out.push({ s: 1 + D.atk * 0.3, act: { k: 'sil', ni, tj: j } }); });
+            if (ni >= 0 && g.phase >= 2) O.board.forEach((D, j) => { if (D && D.def.key !== 'healer' && !D.blocked && D.atk > 0) out.push({ s: 1 + D.atk * 0.3, act: { k: 'sil', ni, tj: j } }); });
             if (g.phase >= g.R.bankPhase && !T.gth && T.gold >= 3) {
                 if (t === 'dark' && T.hp <= 12) out.push({ s: 2.5 + (12 - T.hp) * 0.2, act: { k: 'gth' } });
                 const H = T.board.find((c) => c && c.def.key === 'healer');

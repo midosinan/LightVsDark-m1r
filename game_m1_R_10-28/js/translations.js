@@ -12,7 +12,7 @@ const translations = {
                 { name: "Sword of Justice", description: "Justice Protection: Can only be attacked if the attacker is stronger with higher attack power." }
             ],
             dark: [
-                { name: "Silent Neighbor", description: "Silence and Block: Has a special button `🔇 Block Card` that prevents an enemy card from attacking in the next turn. The card infiltrates the opponent's field and chooses their strongest card to block from attacking." },
+                { name: "Silent Neighbor", description: "Silence and Block: Has a special button `🔇 Block Card` that prevents an enemy card capable of attacking from attacking in the next turn. It cannot block the Light Healer because the healer does not attack." },
                 { name: "Hell Dragon", description: "A very powerful monster with high attack power and health, posing a major threat in battle. Has the highest stats in the game and can defeat most other cards." },
                 { name: "Dark Ghoul", description: "A massive fighter that can withstand hits with medium attack power and high health. A durable card that can endure multiple attacks and deal damage powerfully." },
                 { name: "Dread Priest", description: "A balanced fighter with medium attack power and health. An economical card that can be easily summoned and provides good balance between attack and defense." },
@@ -438,7 +438,7 @@ const translations = {
                 { name: "سيف العدالة", description: "حماية العدالة: لا يمكن هجومه إلا إذا كان المهاجم أقوى منه بقوة هجومية أعلى." }
             ],
             dark: [
-                { name: "الجار الصامت", description: "الصمت والمنع: يملك زراً خاصاً `🔇 منع كرت` يمنع كرتاً معادياً من الهجوم في الدورة التالية. الكرت يتسلل إلى ساحة الخصم ويختار أقوى كرت لديه لمنعه من الهجوم." },
+                { name: "الجار الصامت", description: "الصمت والمنع: يملك زراً خاصاً `🔇 منع كرت` يمنع كرتاً معادياً قادراً على الهجوم من الهجوم في الدورة التالية. لا يمكنه منع معالجة النور لأنها لا تهاجم." },
                 { name: "تنين الجحيم", description: "وحش قوي جداً بقوة هجومية عالية وصحة عالية، يشكل تهديداً كبيراً في المعركة. يمتلك أعلى إحصائيات في اللعبة ويمكنه هزيمة معظم الكروت الأخرى." },
                 { name: "غول الظلام", description: "مقاتل ضخم يتحمل الضربات بقوة هجومية متوسطة وصحة عالية. كرت متين يمكنه الصمود أمام الهجمات المتعددة وإلحاق الضرر بقوة." },
                 { name: "كاهن الرعب", description: "مقاتل متوازن بقوة هجومية وصحة متوسطة. كرت اقتصادي يمكن استدعاؤه بسهولة ويوفر توازناً جيداً بين الهجوم والدفاع." },
