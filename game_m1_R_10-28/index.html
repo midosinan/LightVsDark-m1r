@@ -1,583 +1,467 @@
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Faction Wars</title>
-    <link rel="icon" type="image/svg+xml" href="assets/images/ui/favicon.svg">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,500,0,0" rel="stylesheet">
-    <link rel="stylesheet" href="css/reset.css">
-    <link rel="stylesheet" href="css/variables.css">
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/welcome.css">
-    <link rel="stylesheet" href="css/mobile.css">
-</head>
-<body>
+// =============================================================================
+// شاشة الترحيب وتوجيه اللاعب: (تحدي ناس حقيقيين) أو (تحدي الكمبيوتر)
+// هذا الملف هو "المفتاح" الوحيد بين الوضعين؛ كل وضع يعيش في ملفه المستقل (online.js / ai.js)
+// ولا يعرف أحدهما الآخر.
+// =============================================================================
+(function () {
+    'use strict';
 
-    <!-- زر تبديل اللغة -->
-    <button type="button" id="language-toggle" class="language-toggle" aria-label="Switch Language">العربية</button>
+    const NAME_KEY = 'faction-player-name';
+    const welcomeScreen = document.querySelector('#welcome-screen');
+    const nameInput = document.querySelector('#welcome-name-input');
+    const nameError = document.querySelector('#welcome-error');
+    const challengeHumans = document.querySelector('#challenge-humans');
+    const challengeComputer = document.querySelector('#challenge-computer');
+    const languageToggle = document.querySelector('#language-toggle');
+    const backToWelcome = document.querySelector('#back-to-welcome');
+    const headerSubtitle = document.querySelector('.header-subtitle');
+    const pickDark = document.querySelector('#join-dark-team');
+    const pickLight = document.querySelector('#join-light-team');
+    const pickDarkTitle = document.querySelector('#join-dark-team-title');
+    const pickLightTitle = document.querySelector('#join-light-team-title');
+    const feedbackTrigger = document.querySelector('#feedback-trigger');
+    const feedbackModal = document.querySelector('#feedback-modal');
+    const feedbackNoteInput = document.querySelector('#feedback-note-input');
+    const feedbackSubmitButton = document.querySelector('#feedback-submit');
+    const feedbackCloseButton = document.querySelector('#feedback-close');
+    const feedbackMessage = document.querySelector('#feedback-message');
+    const developerModal = document.querySelector('#developer-secret-modal');
+    const developerPasswordInput = document.querySelector('#developer-secret-password');
+    const developerLoginButton = document.querySelector('#developer-secret-login');
+    const developerCloseButton = document.querySelector('#developer-secret-close');
+    const developerContent = document.querySelector('#developer-secret-content');
+    const developerMessage = document.querySelector('#developer-secret-message');
+    const developerFeedbackList = document.querySelector('#developer-feedback-list');
+    const developerDeleteNotesButton = document.querySelector('#developer-delete-notes');
 
-    <button type="button" class="feedback-trigger" id="feedback-trigger" data-i18n="feedback.open" hidden>Write a note to the developer</button>
-    <div class="feedback-modal screen-hidden" id="feedback-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="feedback-title">
-        <div class="feedback-panel">
-            <h2 id="feedback-title" data-i18n="feedback.title">Note to the developer</h2>
-            <label for="feedback-note-input" class="sr-only" data-i18n="feedback.label">Your note</label>
-            <textarea id="feedback-note-input" rows="5" maxlength="1000" data-i18n-placeholder="feedback.placeholder" placeholder="Write your feedback and thoughts about the game here..."></textarea>
-            <div class="feedback-actions">
-                <button type="button" id="feedback-submit" data-i18n="feedback.send">Send note</button>
-                <button type="button" id="feedback-close" class="secondary" data-i18n="feedback.close">Close</button>
-            </div>
-            <div class="feedback-message" id="feedback-message" role="status" aria-live="polite"></div>
-        </div>
-    </div>
+    let mode = null;   // null | 'online' | 'ai'
+    let developerContextClickTimer = null;
+    let developerContextClickCount = 0;
+    let developerNotesOperation = 0;
 
-    <div class="developer-secret-modal screen-hidden" id="developer-secret-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="developer-secret-title">
-        <div class="developer-secret-panel">
-            <h2 id="developer-secret-title" data-i18n="feedback.adminTitle">Developer Access</h2>
-            <label for="developer-secret-password" class="sr-only" data-i18n="feedback.adminPasswordLabel">Developer password</label>
-            <input id="developer-secret-password" type="password" data-i18n-placeholder="feedback.adminPasswordPlaceholder" placeholder="Enter developer password" autocomplete="current-password">
-            <div class="developer-secret-actions">
-                <button type="button" id="developer-secret-login" data-i18n="feedback.adminOpen">Open</button>
-                <button type="button" id="developer-secret-close" class="secondary" data-i18n="feedback.close">Close</button>
-            </div>
-            <div class="developer-secret-message" id="developer-secret-message" role="status" aria-live="polite"></div>
-            <div class="developer-secret-content" id="developer-secret-content" hidden>
-                <ul id="developer-feedback-list" class="developer-feedback-list"></ul>
-                <div class="developer-secret-actions">
-                    <button type="button" id="developer-delete-notes" class="danger" data-i18n="feedback.deleteAll">Delete all notes</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    function syncOrientationPrompt() {
+        const isPortrait = window.matchMedia('(orientation: portrait)').matches;
+        const isSmallScreen = window.matchMedia('(max-width: 800px)').matches;
 
-    <div class="game-container welcome-screen" id="welcome-screen">
-        <div class="ui-frame-overlay"></div>
-        <div class="split-background">
-            <div class="bg-side shadow-bg"></div>
-            <div class="bg-side dawn-bg"></div>
-        </div>
+        document.body.classList.toggle('is-small-portrait', isSmallScreen && isPortrait);
+    }
 
-        <section class="welcome-panel" aria-labelledby="welcome-title">
-            <span class="game-mark material-symbols-rounded" aria-hidden="true">swords</span>
-            <h1 id="welcome-title" data-i18n="welcome.title">Faction Wars</h1>
-            <p class="welcome-greeting" data-i18n="welcome.greeting">Welcome, warrior, to the battlefield between Light and Darkness! Enter your name, then choose who you want to face.</p>
+    function selectOnlineTeam(team) {
+        if (mode !== 'online') return;
 
-            <div class="welcome-name-box">
-                <label for="welcome-name-input" data-i18n="welcome.nameLabel">What's your name?</label>
-                <input id="welcome-name-input" type="text" maxlength="20" placeholder="Enter your name here" data-i18n-placeholder="welcome.namePlaceholder" autocomplete="off">
-                <p class="welcome-error" id="welcome-error" hidden data-i18n="welcome.nameError">Please enter your name first.</p>
-            </div>
+        App.selectedOnlineTeam = team;
+        selectionScreen.querySelectorAll('.faction-card').forEach((card) => {
+            const isSelected = card.classList.contains(team === 'light' ? 'dawn-faction' : 'shadow-faction');
+            card.classList.toggle('is-selected', isSelected);
+        });
+        [pickLight, pickLightTitle].forEach((button) => button.setAttribute('aria-pressed', String(team === 'light')));
+        [pickDark, pickDarkTitle].forEach((button) => button.setAttribute('aria-pressed', String(team === 'dark')));
 
-            <div class="welcome-actions">
-                <button type="button" class="cta-button btn-shadow" id="challenge-computer" data-i18n="welcome.challengeComputer">Challenge Computer</button>
-                <button type="button" class="cta-button btn-dawn" id="challenge-humans" data-i18n="welcome.challengeHumans">Challenge Real Players</button>
-            </div>
-        </section>
-    </div>
+        const lang = document.documentElement.getAttribute('lang') || 'en';
+        headerSubtitle.textContent = translations[lang].welcome.onlineTeamSelected.replace(
+            '{team}',
+            translations[lang].selection[team === 'light' ? 'lightFaction' : 'darkFaction']
+        );
+    }
 
-    <div class="game-container selection-screen screen-hidden" id="selection-screen" hidden>
-        <!-- الإطار الخارجي المزخرف -->
-        <div class="ui-frame-overlay"></div>
+    function show(screen, visible) {
+        screen.hidden = !visible;
+        screen.classList.toggle('screen-hidden', !visible);
+    }
 
-        <!-- خلفية الشاشة المقسمة -->
-        <div class="split-background">
-            <div class="bg-side shadow-bg"></div>
-            <div class="bg-side dawn-bg"></div>
-        </div>
+    function feedbackText(key, fallback) {
+        const lang = document.documentElement.getAttribute('lang') || 'en';
+        return translations[lang]?.feedback?.[key] || fallback;
+    }
 
-        <!-- شريط العنوان العلوي -->
-        <header class="main-header">
-            <div class="header-banner">
-                <span class="game-mark material-symbols-rounded" aria-hidden="true">swords</span>
-                <h1 data-i18n="title">Faction Wars</h1>
-                <p class="header-subtitle" data-i18n="selection.subtitle">Choose your destiny: Light Faction or Dark Faction?</p>
-                <div class="turn-duration-setting">
-                    <label for="turn-duration" data-i18n="selection.turnDuration">Turn duration</label>
-                    <select id="turn-duration">
-                        <option value="0" selected data-i18n="selection.turnDurationOpen">Unlimited</option>
-                        <option value="45" data-i18n="selection.turnDuration45">45 seconds</option>
-                        <option value="60" data-i18n="selection.turnDuration60">1 minute</option>
-                        <option value="90" data-i18n="selection.turnDuration90">1 minute 30 seconds</option>
-                        <option value="120" data-i18n="selection.turnDuration120">2 minutes</option>
-                    </select>
-                </div>
-                <div class="header-gem"></div>
-                <button type="button" class="guide-button" id="open-guide" data-i18n="selection.guideButton">Game Guide</button>
-                <button type="button" class="guide-button" id="open-tutorial" data-i18n="selection.tutorial.button">Interactive Tutorial</button>
-                <button type="button" class="guide-button mode-back-button" id="back-to-welcome" data-i18n="selection.backButton">Back</button>
-            </div>
-        </header>
+    function syncFeedbackTriggerVisibility() {
+        feedbackTrigger.hidden = battleScreen.hidden
+            || battleScreen.classList.contains('screen-hidden');
+    }
 
-        <!-- الشعار المركزي الفاصل -->
-        <div class="central-emblem">
-            <img src="assets/images/ui/emblem-split.png" alt="شعار الفجر والظلال">
-        </div>
+    async function readFeedbackResponse(response) {
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            return { ok: false, error: null };
+        }
+        try {
+            return await response.json();
+        } catch (error) {
+            return { ok: false, error: null };
+        }
+    }
 
-        <div class="online-lobby" id="online-lobby">
-            <div class="online-lobby-header">
-                <h2 data-i18n="selection.onlineLobby">Available Players</h2>
-                <button type="button" class="online-refresh-button" id="online-refresh-button" data-i18n="selection.refreshPlayers">Refresh</button>
-            </div>
-            <div class="online-player-list" id="online-player-list">
-                <p data-i18n="selection.loadingPlayers">Loading players...</p>
-            </div>
-        </div>
+    function feedbackApiError(response, payload, fallbackKey) {
+        if (response.status === 404) {
+            if (fallbackKey === 'deleteFailed') {
+                return feedbackText(
+                    'deleteEndpointNotFound',
+                    'The delete feature is not available on the server yet. Deploy the latest server.js and refresh the game.'
+                );
+            }
+            return feedbackText('apiNotFound', 'Feedback API not found on the configured game server.');
+        }
+        if (response.status === 503 && payload?.error) {
+            return feedbackText('adminNotConfigured', 'Developer access is not configured on the server.');
+        }
+        if (response.status >= 500 && !payload?.error) {
+            return feedbackText('backendUnavailable', 'Could not connect to the game server. Check the server connection and try again.');
+        }
+        if (response.status === 401) {
+            return feedbackText('accessDenied', 'Access denied.');
+        }
+        return payload?.error || feedbackText(fallbackKey, 'The request failed. Please try again.');
+    }
 
-        <!-- محتوى الفصيلين -->
-        <main class="factions-container">
+    async function postGameServer(path, body) {
+        const serverUrl = String(window.GAME_SERVER_URL || '').trim().replace(/\/+$/, '');
+        if (!serverUrl) {
+            const error = new Error('The game server URL is not configured.');
+            error.name = 'ServerNotConfiguredError';
+            throw error;
+        }
+        const controller = new AbortController();
+        const timeoutId = window.setTimeout(() => controller.abort(), 45000);
+        try {
+            return await fetch(`${serverUrl}${path}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+                signal: controller.signal
+            });
+        } finally {
+            window.clearTimeout(timeoutId);
+        }
+    }
 
-            <!-- فريق النور (الجانب الأيمن) -->
-            <section class="faction-card dawn-faction">
-                <div class="portrait-wrapper">
-                    <button type="button" class="ai-leader-choice btn-dawn" id="join-light-team" aria-labelledby="light-faction-title">
-                        <img src="assets/images/characters/king-dawn.png" alt="" class="portrait-img">
-                    </button>
-                </div>
-                <div class="faction-info">
-                    <h2 id="light-faction-title"><button type="button" class="ai-title-choice" id="join-light-team-title" data-i18n="selection.lightFaction" aria-label="Choose Light Faction">Light Faction</button></h2>
-                    <p class="subtitle" data-i18n="selection.lightSubtitle">(Protector of Light and Justice)</p>
-                </div>
-            </section>
+    function openFeedbackModal() {
+        feedbackModal.classList.remove('screen-hidden');
+        feedbackModal.setAttribute('aria-hidden', 'false');
+        feedbackMessage.textContent = '';
+        feedbackNoteInput.focus();
+    }
 
-            <!-- فريق الظلام (الجانب الأيسر) -->
-            <section class="faction-card shadow-faction">
-                <div class="portrait-wrapper">
-                    <button type="button" class="ai-leader-choice btn-shadow" id="join-dark-team" aria-labelledby="dark-faction-title">
-                        <img src="assets/images/characters/lord-shadow.png" alt="" class="portrait-img">
-                    </button>
-                </div>
-                <div class="faction-info">
-                    <h2 id="dark-faction-title"><button type="button" class="ai-title-choice" id="join-dark-team-title" data-i18n="selection.darkFaction" aria-label="Choose Dark Faction">Dark Faction</button></h2>
-                    <p class="subtitle" data-i18n="selection.darkSubtitle">(Master of Power and Darkness)</p>
-                </div>
-            </section>
+    function closeFeedbackModal() {
+        feedbackModal.classList.add('screen-hidden');
+        feedbackModal.setAttribute('aria-hidden', 'true');
+        feedbackNoteInput.value = '';
+        feedbackMessage.textContent = '';
+    }
 
-        </main>
+    function openDeveloperModal() {
+        developerNotesOperation += 1;
+        developerLoginButton.disabled = false;
+        developerLoginButton.removeAttribute('aria-busy');
+        developerDeleteNotesButton.disabled = false;
+        developerDeleteNotesButton.removeAttribute('aria-busy');
+        developerModal.classList.remove('screen-hidden');
+        developerModal.setAttribute('aria-hidden', 'false');
+        developerPasswordInput.value = '';
+        developerPasswordInput.focus();
+        developerMessage.textContent = '';
+        developerFeedbackList.replaceChildren();
+        developerContent.hidden = true;
+    }
 
-        <!-- اللوحة الجانبية اليسرى: سوق البنك -->
-        <aside class="sidebar side-right">
-            <div class="panel-box shop-panel">
-                <div class="panel-header" data-i18n="selection.bank">Bank Market <span>&gt;</span></div>
-                <ul class="shop-list">
-                    <li><span data-i18n="selection.cards.resurrect">Resurrect</span> <mark>4</mark></li>
-                    <li><span data-i18n="selection.cards.mercenary">Mercenary Army</span> <mark>5</mark></li>
-                    <li><span data-i18n="selection.cards.tax">Forced Tax</span> <mark>3</mark></li>
-                    <li><span data-i18n="selection.cards.bankruptcy">Bankruptcy Curse</span> <mark>4</mark></li>
-                    <li><span data-i18n="selection.cards.luck">Game of Luck</span> <mark>2</mark></li>
-                    <li><span data-i18n="selection.cards.goldToHealth">Exchange Gold for Health</span> <mark>3</mark></li>
-                    <li><span data-i18n="selection.cards.healthToGold">Exchange Leader Health for Gold</span> <mark>+5</mark></li>
-                </ul>
-                <div class="shop-footer" data-i18n="selection.bankClose">Close</div>
-            </div>
-        </aside>
+    function closeDeveloperModal() {
+        developerNotesOperation += 1;
+        developerLoginButton.disabled = false;
+        developerLoginButton.removeAttribute('aria-busy');
+        developerDeleteNotesButton.disabled = false;
+        developerDeleteNotesButton.removeAttribute('aria-busy');
+        developerModal.classList.add('screen-hidden');
+        developerModal.setAttribute('aria-hidden', 'true');
+        developerPasswordInput.value = '';
+        developerMessage.textContent = '';
+        developerFeedbackList.replaceChildren();
+        developerContent.hidden = true;
+    }
 
-        <!-- شريط البطاقات السفلي -->
-      <footer class="bottom-hand">
-    <div class="cards-deck faction-deck good-deck" aria-label="كروت فريق النور">
-        <div class="card"><img src="assets/images/cards/Good/falcon.png" alt="الصقر الجارح"></div>
-        <div class="card"><img src="assets/images/cards/Good/light-healer.png" alt="معالجة النور"></div>
-        <div class="card"><img src="assets/images/cards/Good/cunning-trader.png" alt="التاجر الماكر"></div>
-    </div>
+    function handleDeveloperContextMenu(event) {
+        event.preventDefault();
+        developerContextClickCount += 1;
+        if (developerContextClickTimer) {
+            window.clearTimeout(developerContextClickTimer);
+        }
+        if (developerContextClickCount >= 2) {
+            developerContextClickCount = 0;
+            developerContextClickTimer = null;
+            openDeveloperModal();
+            return;
+        }
+        developerContextClickTimer = window.setTimeout(() => {
+            developerContextClickCount = 0;
+            developerContextClickTimer = null;
+        }, 800);
+    }
 
-    <div class="cards-deck faction-deck evil-deck" aria-label="كروت فريق الظلام">
-        <div class="card"><img src="assets/images/cards/Evil/silent-neighbor.png" alt="الجار الصامت"></div>
-        <div class="card"><img src="assets/images/cards/Evil/hell-dragon.png" alt="تنين الجحيم"></div>
-        <div class="card"><img src="assets/images/cards/Evil/dark-ghoul.png" alt="غول الظلام"></div>
-    </div>
-</footer>
-    </div>
+    function renderDeveloperNotes(notes) {
+        developerFeedbackList.replaceChildren();
+        if (notes.length === 0) {
+            const emptyItem = document.createElement('li');
+            emptyItem.textContent = feedbackText('noNotes', 'No notes yet.');
+            developerFeedbackList.append(emptyItem);
+            return;
+        }
+        notes.forEach((item) => {
+            const listItem = document.createElement('li');
+            const note = document.createElement('span');
+            note.textContent = String(item.message || '');
+            const timestamp = document.createElement('small');
+            timestamp.textContent = new Date(item.createdAt || Date.now()).toLocaleString();
+            listItem.append(note, timestamp);
+            developerFeedbackList.append(listItem);
+        });
+    }
 
-    <div class="guide-modal screen-hidden" id="challenge-team-modal" role="dialog" aria-modal="true" aria-labelledby="challenge-team-title">
-        <div class="guide-panel">
-            <article class="guide-content">
-                <h2 id="challenge-team-title" data-i18n="selection.challengeTeamTitle">Choose your team</h2>
-                <p id="challenge-team-message" data-i18n="selection.challengeTeamPrompt">Choose the team you will play as. Your opponent will be assigned the other team.</p>
-                <div class="name-entry-box">
-                    <button type="button" class="cta-button btn-dawn" data-challenge-team="light" data-i18n="selection.lightFaction">Light Faction</button>
-                    <button type="button" class="cta-button btn-shadow" data-challenge-team="dark" data-i18n="selection.darkFaction">Dark Faction</button>
-                </div>
-            </article>
-        </div>
-    </div>
+    async function loadDeveloperNotes() {
+        if (developerLoginButton.disabled) return;
+        const operation = ++developerNotesOperation;
+        const password = developerPasswordInput.value;
+        if (!password.trim()) {
+            developerMessage.textContent = feedbackText('passwordRequired', 'Password required.');
+            developerPasswordInput.focus();
+            return;
+        }
+        developerLoginButton.disabled = true;
+        developerLoginButton.setAttribute('aria-busy', 'true');
+        developerLoginButton.textContent = feedbackText('loadingNotes', 'Loading notes...');
+        developerMessage.textContent = feedbackText('loadingNotes', 'Loading notes...');
+        developerFeedbackList.replaceChildren();
+        try {
+            const response = await postGameServer('/api/developer-access', { password });
+            const payload = await readFeedbackResponse(response);
+            if (operation !== developerNotesOperation) return;
+            if (!response.ok || !payload?.ok) {
+                developerMessage.textContent = feedbackApiError(response, payload, 'loadFailed');
+                return;
+            }
+            developerMessage.textContent = feedbackText('accessGranted', 'Access granted.');
+            developerContent.hidden = false;
+            const items = Array.isArray(payload.notes) ? payload.notes : [];
+            renderDeveloperNotes(items);
+        } catch (error) {
+            if (operation !== developerNotesOperation) return;
+            developerMessage.textContent = error.name === 'AbortError'
+                ? feedbackText('requestTimedOut', 'The server took too long to respond. Please try again.')
+                : error.name === 'ServerNotConfiguredError'
+                    ? feedbackText('serverNotConfigured', 'The game server URL is not configured.')
+                    : feedbackText('backendUnavailable', 'Could not connect to the game server. Check the server connection and try again.');
+        } finally {
+            if (operation === developerNotesOperation) {
+                developerLoginButton.disabled = false;
+                developerLoginButton.removeAttribute('aria-busy');
+                developerLoginButton.textContent = feedbackText('adminOpen', 'Open');
+            }
+        }
+    }
 
-    <div class="guide-modal screen-hidden" id="guide-modal" role="dialog" aria-modal="true" aria-labelledby="guide-title">
-        <div class="guide-panel">
-            <button type="button" class="guide-close" id="close-guide" aria-label="Close Game Guide">×</button>
-            <article class="guide-content">
-                <h2 id="guide-title" data-i18n="guide.title">Online Play Guide</h2>
-                <p data-i18n="guide.description">This guide explains how to play <strong>Faction Wars</strong> online. The system automatically manages the match, turns, health, gold, market, and victory conditions.</p>
+    async function deleteDeveloperNotes() {
+        if (developerDeleteNotesButton.disabled) return;
+        const confirmation = feedbackText(
+            'deleteAllConfirmation',
+            'Delete all developer notes? This cannot be undone.'
+        );
+        if (!window.confirm(confirmation)) return;
 
-                <h3 data-i18n="guide.start">Starting the Match</h3>
-                <ol>
-                    <li data-i18n="guide.start1">Choose your team: <strong>Light Faction</strong> or <strong>Dark Faction</strong>.</li>
-                    <li data-i18n="guide.start2">Click join to start a new match or join an available opponent.</li>
-                    <li data-i18n="guide.start3">Your name, team, health, and gold appear in the top bar.</li>
-                    <li data-i18n="guide.start4">The match starts with 20 leader health and 5 gold pieces.</li>
-                </ol>
+        const operation = ++developerNotesOperation;
+        developerLoginButton.disabled = true;
+        developerDeleteNotesButton.disabled = true;
+        developerDeleteNotesButton.setAttribute('aria-busy', 'true');
+        developerMessage.textContent = feedbackText('deletingNotes', 'Deleting notes...');
+        const password = developerPasswordInput.value;
+        try {
+            const response = await postGameServer('/api/developer-notes/delete', { password });
+            const payload = await readFeedbackResponse(response);
+            if (operation !== developerNotesOperation) return;
+            if (!response.ok || !payload?.ok) {
+                developerMessage.textContent = feedbackApiError(response, payload, 'deleteFailed');
+                return;
+            }
 
-                <h3 data-i18n="guide.interface">Match Interface</h3>
-                <ul>
-                    <li data-i18n="guide.interface1"><strong>Top Bar:</strong> Shows health and gold of your team and opponent, and indicates whose turn it is.</li>
-                    <li data-i18n="guide.interface2"><strong>Battlefield:</strong> Place your forces in available slots to face opponent forces.</li>
-                    <li data-i18n="guide.interface3"><strong>Your Hand:</strong> Shows available cards for summoning, with card cost and value.</li>
-                    <li data-i18n="guide.interface4"><strong>Bank Market:</strong> Includes cards, assistance, weapons, armor, spells, and equipment.</li>
-                </ul>
+            const verificationResponse = await postGameServer('/api/developer-access', { password });
+            const verification = await readFeedbackResponse(verificationResponse);
+            if (operation !== developerNotesOperation) return;
+            if (!verificationResponse.ok || !verification?.ok) {
+                developerMessage.textContent = feedbackApiError(verificationResponse, verification, 'deleteFailed');
+                return;
+            }
 
-                <h3 data-i18n="guide.cards">Cards and Resources</h3>
-                <ul>
-                    <li data-i18n="guide.cards1">Each card has a <strong>health</strong> value shown beside or below its image.</li>
-                    <li data-i18n="guide.cards2">Each card has a <strong>gold</strong> value or cost associated with its use in the match.</li>
-                    <li data-i18n="guide.cards3">You cannot use a card if you don't have enough gold for its cost.</li>
-                    <li data-i18n="guide.cards4">Card health decreases when attacked, and is removed from the battlefield when it reaches zero.</li>
-                    <li data-i18n="guide.cards5">Each faction has one copy of each basic card. Defeated basic cards go to the Graveyard; Bank cards are unique to the match and return to the Bank when defeated.</li>
-                </ul>
+            const remainingNotes = Array.isArray(verification.notes) ? verification.notes : [];
+            renderDeveloperNotes(remainingNotes);
+            if (remainingNotes.length > 0) {
+                developerMessage.textContent = feedbackText('deleteVerificationFailed', 'Some notes are still saved. Please try deleting them again.');
+                return;
+            }
+            developerMessage.textContent = feedbackText('deleteAllSuccess', 'All notes were deleted.');
+        } catch (error) {
+            if (operation !== developerNotesOperation) return;
+            developerMessage.textContent = error.name === 'AbortError'
+                ? feedbackText('requestTimedOut', 'The server took too long to respond. Please try again.')
+                : error.name === 'ServerNotConfiguredError'
+                    ? feedbackText('serverNotConfigured', 'The game server URL is not configured.')
+                    : feedbackText('backendUnavailable', 'Could not connect to the game server. Check the server connection and try again.');
+        } finally {
+            if (operation === developerNotesOperation) {
+                developerLoginButton.disabled = false;
+                developerDeleteNotesButton.disabled = false;
+                developerDeleteNotesButton.removeAttribute('aria-busy');
+            }
+        }
+    }
 
-                <h3 data-i18n="guide.turnFlow">Turn Flow</h3>
-                <ol>
-                    <li data-i18n="guide.turnFlow1">The system waits until your turn becomes active.</li>
-                    <li data-i18n="guide.turnFlow2">Use gold to buy a card or summon a force or activate a market item.</li>
-                    <li data-i18n="guide.turnFlow3">Place cards in available slots in the battlefield.</li>
-                    <li data-i18n="guide.turnFlow4">Select attack target then press <strong>Attack</strong>.</li>
-                    <li data-i18n="guide.turnFlow5">The system executes the attack and updates health and gold automatically, then turn passes to opponent.</li>
-                </ol>
+    async function submitFeedbackNote() {
+        const message = feedbackNoteInput.value.trim();
+        if (!message) {
+            feedbackMessage.textContent = feedbackText('emptyNote', 'Write a note before sending.');
+            feedbackNoteInput.focus();
+            return;
+        }
+        feedbackSubmitButton.disabled = true;
+        feedbackSubmitButton.setAttribute('aria-busy', 'true');
+        feedbackMessage.textContent = feedbackText('sending', 'Sending...');
+        try {
+            const response = await postGameServer('/api/developer-note', { message });
+            const payload = await readFeedbackResponse(response);
+            if (!response.ok || !payload?.ok) {
+                feedbackMessage.textContent = feedbackApiError(response, payload, 'sendFailed');
+                return;
+            }
+            feedbackNoteInput.value = '';
+            feedbackMessage.textContent = feedbackText('sent', 'Thank you! Your note was sent.');
+        } catch (error) {
+            feedbackMessage.textContent = error.name === 'AbortError'
+                ? feedbackText('requestTimedOut', 'The server took too long to respond. Please try again.')
+                : error.name === 'ServerNotConfiguredError'
+                    ? feedbackText('serverNotConfigured', 'The game server URL is not configured.')
+                    : feedbackText('backendUnavailable', 'Could not connect to the game server. Check the server connection and try again.');
+        } finally {
+            feedbackSubmitButton.disabled = false;
+            feedbackSubmitButton.removeAttribute('aria-busy');
+        }
+    }
 
-                <h3 data-i18n="guide.goldIncome">Periodic Gold Income Table</h3>
-                <table>
-                    <thead>
-                        <tr><th data-i18n="guide.phase1">Round</th><th data-i18n="guide.phase1Gold">Gold per Player</th><th data-i18n="guide.phase1Desc">Economy & Gameplay</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td data-i18n="guide.phase1">1</td><td data-i18n="guide.phase1Gold">5 pieces</td><td data-i18n="guide.phase1Desc">Match start and summoning first forces.</td></tr>
-                        <tr><td data-i18n="guide.phase2">2</td><td data-i18n="guide.phase2Gold">4 gold pieces</td><td data-i18n="guide.phase2Desc">Gold flow for strategy building.</td></tr>
-                        <tr><td data-i18n="guide.phase3">3</td><td data-i18n="guide.phase3Gold">3 pieces</td><td data-i18n="guide.phase3Desc">Resource management and attack planning.</td></tr>
-                        <tr><td data-i18n="guide.phase4">4</td><td data-i18n="guide.phase4Gold">2 pieces</td><td data-i18n="guide.phase4Desc">Careful economy phase.</td></tr>
-                        <tr><td data-i18n="guide.phase5">5</td><td data-i18n="guide.phase5Gold">1 piece</td><td data-i18n="guide.phase5Desc">Last income from bank.</td></tr>
-                        <tr><td data-i18n="guide.phase6">6+</td><td data-i18n="guide.phase6Gold">0, income stops</td><td data-i18n="guide.phase6Desc">Rely on forces in the battlefield.</td></tr>
-                    </tbody>
-                </table>
+    function readName() {
+        const name = nameInput.value.trim().slice(0, 20);
+        nameError.hidden = Boolean(name);
+        if (!name) { nameInput.focus(); return ''; }
+        try { localStorage.setItem(NAME_KEY, name); } catch (error) { /* التخزين غير متاح: لا مشكلة */ }
+        return name;
+    }
 
-                <h3 data-i18n="guide.goldToHealth">Exchanging Leader Health for Gold (Emergency Funding)</h3>
-                <ul>
-                    <li data-i18n="guide.goldToHealth1">You can sacrifice 2 health points (2❤) from your team leader to get <strong>5 gold pieces</strong> to continue the battle.</li>
-                    <li data-i18n="guide.goldToHealth2">This feature is available from the bank market (once per turn), or as an emergency window if you can't execute any move and don't have enough gold.</li>
-                    <li data-i18n="guide.goldToHealth3">Your leader's health must be more than 2 to be able to sacrifice.</li>
-                </ul>
+    const App = {
+        playerName: '',
 
-                <h3 data-i18n="guide.victory">Victory Conditions</h3>
-                <p data-i18n="guide.victoryDesc">The system announces the result automatically when one of these conditions is met:</p>
-                <ol>
-                    <li data-i18n="guide.victory1"><strong>Military Victory:</strong> Opponent leader health reaches <strong>0</strong>.</li>
-                    <li data-i18n="guide.victory2"><strong>Economic Victory:</strong> Your gold reaches <strong>30</strong> pieces in your treasury.</li>
-                </ol>
+        showWelcome() {
+            if (mode === 'online') OnlineMode.exit();
+            if (mode === 'ai') AIMode.exit();
+            mode = null;
+            languageToggle.disabled = false;
+            App.selectedOnlineTeam = null;
+            selectionScreen.querySelectorAll('.faction-card').forEach((card) => card.classList.remove('is-selected'));
+            pickLight.disabled = true;
+            pickDark.disabled = true;
+            pickLightTitle.disabled = true;
+            pickDarkTitle.disabled = true;
+            show(selectionScreen, false);
+            show(battleScreen, false);
+            show(welcomeScreen, true);
+            nameInput.focus();
+        },
 
-                <h3 data-i18n="guide.connection">Connection and Disconnection</h3>
-                <ul>
-                    <li data-i18n="guide.connection1">Turn indicator shows when you can execute commands.</li>
-                    <li data-i18n="guide.connection2">If disconnected, reopen the match or click back then join again.</li>
-                    <li data-i18n="guide.connection3">Don't close the page during attack execution or purchase until match update completes.</li>
-                </ul>
-            </article>  
-        </div>
-    </div>
+        // الشاشة الرئيسية للوضع الحالي: قائمة اللاعبين (أونلاين) أو اختيار الفريق (كمبيوتر)
+        showModeHome() {
+            if (!mode) { App.showWelcome(); return; }
+            show(welcomeScreen, false);
+            show(battleScreen, false);
+            selectionScreen.classList.toggle('mode-online', mode === 'online');
+            selectionScreen.classList.toggle('mode-ai', mode === 'ai');
+            pickLight.disabled = mode !== 'ai';
+            pickDark.disabled = mode !== 'ai';
+            pickLightTitle.disabled = mode !== 'ai';
+            pickDarkTitle.disabled = mode !== 'ai';
+            if (mode === 'online') {
+                pickLight.disabled = false;
+                pickDark.disabled = false;
+                pickLightTitle.disabled = false;
+                pickDarkTitle.disabled = false;
+                App.selectedOnlineTeam = null;
+                selectionScreen.querySelectorAll('.faction-card').forEach((card) => card.classList.remove('is-selected'));
+            }
+            
+            // Get translations based on current language
+            const lang = document.documentElement.getAttribute('lang') || 'en';
+            const t = translations[lang];
+            const greetingKey = mode === 'online' ? 'onlineGreeting' : 'aiGreeting';
+            const greeting = t.welcome[greetingKey].replace('{name}', App.playerName);
+            
+            headerSubtitle.textContent = greeting;
+            show(selectionScreen, true);
+        },
 
-    <div class="tutorial-modal screen-hidden" id="tutorial-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="tutorial-title">
-        <section class="tutorial-window">
-            <header class="tutorial-header">
-                <div>
-                    <h2 id="tutorial-title" data-i18n="selection.tutorial.title">Learn by watching</h2>
-                    <p data-i18n="selection.tutorial.subtitle">A slow demonstration match between two computer players</p>
-                </div>
-                <button type="button" class="tutorial-close" id="tutorial-close" data-i18n-aria-label="selection.tutorial.close" aria-label="Close tutorial">×</button>
-            </header>
-            <div class="tutorial-scoreboard" id="tutorial-scoreboard">
-                <section class="tutorial-team light" data-tutorial-team="light">
-                    <strong data-i18n="selection.tutorial.lightTeam">Light Computer</strong>
-                    <span><span data-i18n="selection.tutorial.health">Leader health</span>: <b data-tutorial-health="light">20</b></span>
-                    <span><span data-i18n="selection.tutorial.gold">Gold</span>: <b data-tutorial-gold="light">5</b></span>
-                </section>
-                <div class="tutorial-round">
-                    <span data-i18n="selection.tutorial.round">Round</span>
-                    <strong id="tutorial-round">1</strong>
-                    <span id="tutorial-turn" data-i18n="selection.tutorial.turnLight">Light's turn</span>
-                </div>
-                <section class="tutorial-team dark" data-tutorial-team="dark">
-                    <strong data-i18n="selection.tutorial.darkTeam">Dark Computer</strong>
-                    <span><span data-i18n="selection.tutorial.health">Leader health</span>: <b data-tutorial-health="dark">20</b></span>
-                    <span><span data-i18n="selection.tutorial.gold">Gold</span>: <b data-tutorial-gold="dark">5</b></span>
-                </section>
-            </div>
-            <div class="tutorial-board" id="tutorial-board">
-                <section class="tutorial-side dark" data-i18n-aria-label="selection.tutorial.darkTeam" aria-label="Dark computer battlefield">
-                    <div class="tutorial-side-title" data-i18n="selection.tutorial.darkTeam">Dark Computer</div>
-                    <div class="tutorial-card-row" data-tutorial-cards="dark"></div>
-                </section>
-                <div class="tutorial-center" id="tutorial-center" aria-hidden="true">⚔</div>
-                <section class="tutorial-side light" data-i18n-aria-label="selection.tutorial.lightTeam" aria-label="Light computer battlefield">
-                    <div class="tutorial-side-title" data-i18n="selection.tutorial.lightTeam">Light Computer</div>
-                    <div class="tutorial-card-row" data-tutorial-cards="light"></div>
-                </section>
-                <div class="tutorial-market" id="tutorial-market" hidden>
-                    <span data-i18n="selection.tutorial.market">Round 3: the Bank Market opens</span>
-                    <div class="tutorial-market-card" id="tutorial-market-card"></div>
-                </div>
-            </div>
-            <article class="tutorial-caption" aria-live="polite" aria-atomic="true">
-                <div class="tutorial-caption-top">
-                    <span id="tutorial-step-count"></span>
-                    <span class="tutorial-auto-indicator" id="tutorial-auto-indicator" data-i18n="selection.tutorial.playing">DEMO PLAYING</span>
-                </div>
-                <h3 id="tutorial-step-title"></h3>
-                <p id="tutorial-step-message"></p>
-            </article>
-            <div class="tutorial-progress" role="progressbar" aria-label="Tutorial progress" aria-valuemin="1" aria-valuemax="8" aria-valuenow="1">
-                <span id="tutorial-progress-bar"></span>
-            </div>
-            <footer class="tutorial-controls">
-                <button type="button" class="tutorial-secondary" id="tutorial-back" data-i18n="selection.tutorial.previous">Previous</button>
-                <div class="tutorial-control-main">
-                    <button type="button" class="tutorial-secondary" id="tutorial-pause" data-i18n="selection.tutorial.pause">Pause</button>
-                    <button type="button" class="tutorial-primary" id="tutorial-next" data-i18n="selection.tutorial.next">Next</button>
-                </div>
-                <button type="button" class="tutorial-secondary" id="tutorial-skip" data-i18n="selection.tutorial.skip">Skip</button>
-            </footer>
-        </section>
-    </div>
+        enterOnline() {
+            const name = readName();
+            if (!name) return;
+            App.playerName = name;
+            App.selectedOnlineTeam = null;
+            mode = 'online';
+            OnlineMode.enter(name);
+            App.showModeHome();
+        },
 
-    <div class="attack-modal screen-hidden" id="attack-modal" role="dialog" aria-modal="true" aria-labelledby="attack-title" aria-hidden="true">
-        <div class="attack-panel">
-            <button type="button" class="guide-close" id="close-attack-modal" data-i18n-aria-label="battle.closeAttack" aria-label="Cancel attack selection">×</button>
-            <h2 id="attack-title" data-i18n="battle.attackTitle">Choose a target to attack</h2>
-            <div class="attack-targets" id="attack-targets"></div>
-            <p class="attack-empty-message" id="attack-empty-message" hidden data-i18n="battle.noOpponentCards">There are no opponent cards on the battlefield.</p>
-        </div>
-    </div>
+        enterComputer() {
+            const lang = document.documentElement.getAttribute('lang') || 'en';
+            const name = nameInput.value.trim().slice(0, 20)
+                || translations[lang].welcome.defaultPlayerName;
+            nameError.hidden = true;
+            App.playerName = name;
+            try { localStorage.setItem(NAME_KEY, name); } catch (error) { /* التخزين غير متاح: لا مشكلة */ }
+            mode = 'ai';
+            App.showModeHome();
+        }
+    };
+    App.selectedOnlineTeam = null;
+    window.App = App;
 
-    <div class="silence-modal screen-hidden" id="silence-modal" role="dialog" aria-modal="true" aria-labelledby="silence-title" aria-hidden="true">
-        <div class="attack-panel">
-            <button type="button" class="guide-close" id="close-silence-modal" data-i18n-aria-label="battle.closeSilence" aria-label="Cancel block selection">×</button>
-            <h2 id="silence-title" data-i18n="battle.silenceTitle">Choose a card to block</h2>
-            <div class="attack-targets" id="silence-targets"></div>
-            <p class="attack-empty-message" id="silence-empty-message" hidden data-i18n="battle.noOpponentCards">There are no opponent cards on the battlefield.</p>
-        </div>
-    </div>
+    challengeHumans.addEventListener('click', App.enterOnline);
+    challengeComputer.addEventListener('click', App.enterComputer);
+    backToWelcome.addEventListener('click', App.showWelcome);
+    feedbackTrigger?.addEventListener('click', openFeedbackModal);
+    syncFeedbackTriggerVisibility();
+    new MutationObserver(syncFeedbackTriggerVisibility).observe(battleScreen, {
+        attributes: true,
+        attributeFilter: ['class', 'hidden']
+    });
+    feedbackCloseButton?.addEventListener('click', closeFeedbackModal);
+    feedbackSubmitButton?.addEventListener('click', submitFeedbackNote);
+    feedbackModal?.addEventListener('click', (event) => {
+        if (event.target === feedbackModal) closeFeedbackModal();
+    });
+    languageToggle?.addEventListener('contextmenu', handleDeveloperContextMenu);
+    developerCloseButton?.addEventListener('click', closeDeveloperModal);
+    developerLoginButton?.addEventListener('click', loadDeveloperNotes);
+    developerDeleteNotesButton?.addEventListener('click', deleteDeveloperNotes);
+    window.addEventListener('resize', syncOrientationPrompt);
+    window.addEventListener('orientationchange', syncOrientationPrompt);
+    window.screen.orientation?.addEventListener?.('change', syncOrientationPrompt);
+    syncOrientationPrompt();
+    developerPasswordInput?.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') loadDeveloperNotes();
+    });
+    developerModal?.addEventListener('click', (event) => {
+        if (event.target === developerModal) closeDeveloperModal();
+    });
+    // اختيار القائد يبدأ مباراة الكمبيوتر مباشرة.
+    const chooseComputerTeam = (team) => {
+        if (mode === 'ai') AIMode.start(team, getSelectedTurnDurationMs());
+        else selectOnlineTeam(team);
+    };
+    pickLight.addEventListener('click', () => chooseComputerTeam('light'));
+    pickDark.addEventListener('click', () => chooseComputerTeam('dark'));
+    pickLightTitle.addEventListener('click', () => chooseComputerTeam('light'));
+    pickDarkTitle.addEventListener('click', () => chooseComputerTeam('dark'));
+    nameInput.addEventListener('input', () => { nameError.hidden = true; });
 
-    <div class="card-info-modal screen-hidden" id="card-info-modal" role="dialog" aria-modal="true" aria-labelledby="card-info-title" aria-hidden="true">
-        <div class="card-info-panel">
-            <button type="button" class="guide-close" id="close-card-info-modal" aria-label="إغلاق معلومات الكرت">×</button>
-            <div class="card-info-content">
-                <img id="card-info-image" src="" alt="صورة الكرت">
-                <div class="card-info-details">
-                    <h2 id="card-info-title">اسم الكرت</h2>
-                    <div class="card-info-stats">
-                        <span>❤ <span data-i18n="card.health">Health</span>: <strong id="card-info-health">0</strong></span>
-                        <span>⚔ <span data-i18n="card.attack">Attack</span>: <strong id="card-info-attack">0</strong></span>
-                        <span>◉ <span data-i18n="card.cost">Cost</span>: <strong id="card-info-cost">0</strong></span>
-                    </div>
-                    <p id="card-info-description">وصف الكرت</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="victory-modal screen-hidden" id="victory-modal" role="dialog" aria-modal="true" aria-labelledby="victory-title" aria-hidden="true">
-        <div class="victory-panel">
-            <button type="button" class="victory-close" id="victory-close" data-i18n-aria-label="battle.closeVictory" aria-label="Close result">×</button>
-            <span class="victory-result-icon" id="victory-result-icon" aria-hidden="true"></span>
-            <img id="victory-leader-image" src="" alt="القائد المنتصر">
-            <h2 id="victory-title">مبروك</h2>
-            <p id="victory-message"></p>
-            <div class="victory-actions">
-                <button type="button" id="victory-new-game" data-i18n="battle.newGame">New Game</button>
-            </div>
-        </div>
-    </div>
-
-    <main class="battle-screen screen-hidden" id="battle-screen" hidden>
-        <div class="battle-background" aria-hidden="true"></div>
-        <div class="orientation-prompt" role="status">
-            <div class="orientation-prompt-panel">
-                <span class="orientation-prompt-icon" aria-hidden="true">↻</span>
-                <strong lang="ar">أدر هاتفك للعب بالوضع الأفقي</strong>
-                <strong lang="en">Rotate your phone to play in landscape</strong>
-            </div>
-        </div>
-        <button type="button" class="battle-back-button" id="battle-back-button" aria-label="العودة إلى اختيار الفريق" title="العودة إلى اختيار الفريق">↩</button>
-
-        <header class="battle-header">
-            <section class="player-banner light-banner" id="light-player-banner">
-                <div class="player-portrait"><img src="assets/images/characters/king-dawn.png" alt="King of Dawn"></div>
-                <div>
-                    <h1 data-i18n="battle.lightTeam">Light Team</h1>
-                    <p>King of Dawn</p>
-                    <div class="player-stats"><span>❤ <strong id="light-health">20</strong></span><span>◉ <strong id="light-gold">5</strong></span></div>
-                </div>
-            </section>
-            <div class="turn-indicator">
-                <span id="turn-indicator-label" data-i18n="battle.turn">Your Turn</span>
-                <span id="turn-timer" class="turn-timer" hidden aria-live="off"></span>
-                <button type="button" class="turn-audio-toggle" id="turn-audio-toggle" aria-pressed="true" aria-label="Mute sound effects" title="Mute sound effects" data-i18n-aria-label="battle.muteSounds" data-i18n-title="battle.muteSounds">
-                    <span class="material-symbols-rounded" id="turn-audio-icon" aria-hidden="true">volume_up</span>
-                </button>
-            </div>
-            <section class="player-banner dark-banner" id="dark-player-banner">
-                <div>
-                    <h1 data-i18n="battle.darkTeam">Dark Team</h1>
-                    <p>Lord of Shadows</p>
-                    <div class="player-stats"><span>❤ <strong id="dark-health">20</strong></span><span>◉ <strong id="dark-gold">5</strong></span></div>
-                </div>
-                <div class="player-portrait"><img src="assets/images/characters/lord-shadow.png" alt="Lord of Shadows"></div>
-            </section>
-        </header>
-
-        <section class="battle-arena" aria-label="Battlefield">
-            <div class="opponent-row battlefield-row">
-                <div class="empty-slot leader-slot computer-leader-slot" id="computer-leader-slot"></div><div class="empty-slot computer-slot" data-slot-index="1"></div><div class="empty-slot computer-slot" data-slot-index="2"></div><div class="empty-slot computer-slot" data-slot-index="3"></div><div class="empty-slot computer-slot" data-slot-index="4"></div>
-            </div>
-            <div class="arena-title" data-i18n="battle.battlefield">Battlefield</div>
-            <div class="player-row battlefield-row">
-                <div class="empty-slot leader-slot" id="leader-slot"></div><div class="empty-slot drop-slot" data-slot-index="1"></div><div class="empty-slot drop-slot" data-slot-index="2"></div><div class="empty-slot drop-slot" data-slot-index="3"></div><div class="empty-slot drop-slot" data-slot-index="4"></div>
-            </div>
-        </section>
-
-        <aside class="battle-graveyard" id="battle-graveyard" aria-label="Battle Graveyard">
-            <button type="button" class="graveyard-toggle" id="graveyard-toggle" aria-expanded="false" aria-controls="battle-graveyard-slots" aria-label="Show Graveyard">
-                <span aria-hidden="true">⚰</span>
-                <small class="graveyard-toggle-count" id="graveyard-toggle-count">0</small>
-            </button>
-            <h2 data-i18n="battle.graveyard">Graveyard</h2>
-            <div class="battle-graveyard-slots" id="battle-graveyard-slots"></div>
-        </aside>
-
-        <div class="battle-toolbar" role="group" aria-label="Battle controls">
-            <button type="button" class="bank-toggle" id="bank-toggle" aria-expanded="false" aria-controls="battle-shop">
-                <img src="assets/images/icons/icon-bank.png" alt="">
-                <span data-i18n="battle.bank">Bank Market</span>
-            </button>
-            <div class="bank-exchange-actions" role="group" aria-label="Leader exchanges">
-                <button type="button" class="gold-to-health-button" id="gold-to-health-button" disabled>
-                    <span data-i18n="battle.goldToHealth">Exchange Gold for Health</span>
-                    <small data-i18n="battle.goldToHealthCost">3 gold -> 6 health</small>
-                </button>
-                <button type="button" class="gold-to-health-button health-to-gold-button" id="health-to-gold-button" disabled>
-                    <span data-i18n="battle.healthToGold">Exchange Leader Health for Gold</span>
-                    <small data-i18n="battle.healthToGoldCost">2 leader health -> 5 gold</small>
-                </button>
-            </div>
-            <button type="button" class="bank-toggle lottery-toggle bank-card" id="lottery-toggle" data-bank-cost="2" data-bank-name="Game of Luck" data-bank-action="lottery">
-                <img src="assets/images/bank-cards/luck.svg" alt="Game of Luck">
-                <span data-i18n="battle.luck">Game of Luck</span>
-                <small>◉ 2</small>
-            </button>
-            <button type="button" class="bank-toggle hand-toggle" id="hand-toggle" aria-expanded="false" aria-controls="hand-modal" aria-label="كروت اليد" title="كروت اليد" data-i18n-aria-label="battle.handCards" data-i18n-title="battle.handCards">
-                <span class="hand-toggle-label" data-i18n="battle.handCards">كروت اليد</span>
-            </button>
-            <button type="button" class="end-turn-button" id="end-turn-button" hidden data-i18n="battle.endTurn">End Turn</button>
-        </div>
-
-        <aside class="battle-shop" id="battle-shop" aria-hidden="true">
-            <div class="battle-shop-header">
-                <h2 id="shop-title" data-i18n="battle.shopTitle">Bank Market</h2>
-                <button type="button" class="shop-close" id="shop-close" data-i18n-aria-label="battle.shopClose" aria-label="Close Bank Market">✕</button>
-            </div>
-            <div class="shop-choices" role="group" aria-label="Shop category">
-                <button type="button" class="shop-choice" id="shop-bank-choice" aria-pressed="false" data-i18n="battle.buyFromBank">Buy cards from the Bank</button>
-                <button type="button" class="shop-choice" id="shop-graveyard-choice" aria-pressed="false" data-i18n="battle.recoverFromGraveyard">Recover cards from the Graveyard</button>
-            </div>
-            <section class="shop-inventory" id="bank-inventory" hidden>
-                <div class="bank-cards" aria-label="Bank Cards" data-i18n-aria-label="battle.bankCards">
-                    <button type="button" class="bank-card" data-bank-cost="4" data-bank-name="بعث الارواح" data-card-health="10" data-card-attack="3" title="While on the battlefield, prevents the opponent from deploying Silent Neighbor. If Silent Neighbor is already there, destroys it immediately without taking damage." data-i18n-title="battle.bankCardDescriptions.resurrect"><img src="assets/images/bank-cards/resurrect.jpg" alt="Resurrect" data-i18n-alt="battle.bankCards.resurrect"><span data-i18n="battle.bankResurrect">Resurrect</span><small>◉ 4</small></button>
-                    <button type="button" class="bank-card" data-bank-cost="5" data-bank-name="جيش المرتزقة" data-card-health="8" data-card-attack="10" title="A hired fighter with 8 health and 10 attack." data-i18n-title="battle.bankCardDescriptions.mercenary"><img src="assets/images/bank-cards/mercenary-army.jpg" alt="Mercenary Army" data-i18n-alt="battle.bankCards.mercenary"><span data-i18n="battle.bankMercenary">Mercenary Army</span><small>◉ 5</small></button>
-                    <button type="button" class="bank-card" data-bank-cost="3" data-bank-name="ضريبة قسرية" data-card-health="10" data-card-attack="4" title="At the end of each round, the opponent loses 1 gold while this card remains on the battlefield." data-i18n-title="battle.bankCardDescriptions.tax"><img src="assets/images/bank-cards/forced-tax.jpg" alt="Forced Tax" data-i18n-alt="battle.bankCards.tax"><span data-i18n="battle.bankTax">Forced Tax</span><small>◉ 3</small></button>
-                    <button type="button" class="bank-card" data-bank-cost="4" data-bank-name="لعنة الافلاس" data-card-health="7" data-card-attack="4" title="At the end of each round, the opponent loses 2 gold while this card remains on the battlefield." data-i18n-title="battle.bankCardDescriptions.bankruptcy"><img src="assets/images/bank-cards/bankruptcy-curse.jpg" alt="Bankruptcy Curse" data-i18n-alt="battle.bankCards.bankruptcy"><span data-i18n="battle.bankruptcy">Bankruptcy Curse</span><small>◉ 4</small></button>
-                    <button type="button" class="bank-card" data-bank-cost="7" data-bank-name="درع القائد" data-card-health="10" data-card-attack="6" title="Protects its leader from damage while this card remains on the battlefield." data-i18n-title="battle.bankCardDescriptions.commanderShield"><img src="assets/images/bank-cards/leader-shield.jpg" alt="Commander's Shield" data-i18n-alt="battle.bankCards.commanderShield"><span data-i18n="battle.bankCards.commanderShield">Commander's Shield</span><small>◉ 7</small></button>
-                </div>
-            </section>
-            <section class="shop-inventory" id="graveyard-inventory" hidden>
-                <div class="graveyard-bank-cards" id="graveyard-bank-cards" aria-label="كروت المقبرة المتاحة للشراء"></div>
-            </section>
-        </aside>
-
-        <div class="battle-news" role="status" aria-live="polite">
-            <div class="battle-news-header">
-                <strong>⚔️ <span data-i18n="battle.gameEvents">Game Events</span></strong>
-                <div class="battle-news-controls" role="group" aria-label="Game events controls">
-                    <span class="battle-news-count" id="battle-news-count" aria-live="off"></span>
-                    <button type="button" id="battle-news-expand" data-i18n-aria-label="battle.expandGameEvents" data-i18n-title="battle.expandGameEvents" aria-label="Enlarge game events" title="Enlarge game events">+</button>
-                    <button type="button" id="battle-news-shrink" data-i18n-aria-label="battle.shrinkGameEvents" data-i18n-title="battle.shrinkGameEvents" aria-label="Shrink game events" title="Shrink game events">−</button>
-                    <button type="button" id="battle-news-close" data-i18n-aria-label="battle.hideGameEvents" data-i18n-title="battle.hideGameEvents" aria-label="Hide game events" title="Hide game events">×</button>
-                </div>
-            </div>
-            <ul class="news-ticker" id="battle-news-text" aria-label="Game events">
-                <li class="news-empty" data-i18n="battle.defaultMessage">Select a card or execute a command to start your turn.</li>
-            </ul>
-        </div>
-        <button type="button" id="battle-news-reopen" data-i18n-aria-label="battle.showGameEvents" data-i18n-title="battle.showGameEvents" aria-label="Show game events" title="Show game events" hidden>
-            <span aria-hidden="true">⚔</span>
-            <span data-i18n="battle.gameEvents">Game Events</span>
-        </button>
-
-        <div class="insufficient-gold-modal screen-hidden" id="insufficient-gold-modal" role="alertdialog" aria-modal="true" aria-labelledby="insufficient-gold-title" aria-describedby="insufficient-gold-message">
-            <div class="insufficient-gold-panel">
-                <span class="insufficient-gold-icon" aria-hidden="true">◉</span>
-                <h2 id="insufficient-gold-title" data-i18n="battle.insufficientGold">Not enough gold</h2>
-                <p id="insufficient-gold-message"></p>
-                <button type="button" id="close-insufficient-gold" data-i18n="battle.ok">OK</button>
-            </div>
-        </div>
-
-        <div class="turn-confirm-modal screen-hidden" id="turn-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="turn-confirm-title">
-            <div class="turn-confirm-panel">
-                <h2 id="turn-confirm-title" data-i18n="battle.turnConfirm">You ended your turn without an action</h2>
-                <div class="turn-confirm-actions">
-                    <button type="button" id="withdraw-turn-button" data-i18n="battle.withdraw">Do you want to withdraw?</button>
-                    <button type="button" id="continue-turn-button" data-i18n="battle.continueTurn">No, I will continue</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="emergency-sacrifice-modal screen-hidden" id="emergency-sacrifice-modal" role="dialog" aria-modal="true" aria-labelledby="emergency-sacrifice-title">
-            <div class="turn-confirm-panel emergency-sacrifice-panel">
-                <h2 id="emergency-sacrifice-title" data-i18n="battle.noMoveTitle">No move available</h2>
-                <p id="emergency-sacrifice-desc" data-i18n="battle.emergencySacrifice">You do not have enough gold to deploy cards and no attack targets are available. Sacrifice 2 leader health for 5 gold and continue?</p>
-                <div class="turn-confirm-actions">
-                    <button type="button" id="accept-sacrifice-button" data-i18n="battle.acceptSacrifice">Yes, sacrifice 2 health (+5 gold)</button>
-                    <button type="button" id="decline-sacrifice-button" data-i18n="battle.declineSacrifice">No, end turn</button>
-                </div>
-            </div>
-        </div>
-
-        <section class="battle-hand" id="battle-hand" aria-label="Light Team Cards"></section>
-    </main>
-
-    <div class="hand-modal screen-hidden" id="hand-modal" role="dialog" aria-modal="true" aria-labelledby="hand-title" aria-hidden="true">
-        <div class="hand-modal-panel">
-            <div class="hand-modal-header">
-                <h2 id="hand-title" data-i18n="battle.handCards">Hand Cards</h2>
-                <button type="button" class="hand-modal-close" id="close-hand-modal" aria-label="Close Hand Cards">✕</button>
-            </div>
-            <div class="hand-modal-content" id="hand-modal-content">
-                <!-- سيتم ملء الكروت هنا ديناميكياً -->
-            </div>
-        </div>
-    </div>
-
-
-    <script>window.GAME_SERVER_URL = 'https://game-v2-server.onrender.com';</script>
-    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-    <!-- نظام الترجمة متعدد اللغات -->
-    <script src="js/translations.js"></script>
-    <!-- اللعبة الأساسية (مشتركة بين الوضعين، لا تعرف أياً منهما) -->
-    <script src="js/game.js"></script>
-    <!-- وضع تحدي ناس حقيقيين: الأونلاين فقط -->
-    <script src="js/online.js"></script>
-    <!-- وضع تحدي الكمبيوتر: العقل الإلكتروني فقط -->
-    <script src="js/ai-engine.js"></script>
-    <script src="js/ai.js"></script>
-    <!-- شاشة الترحيب وتوجيه اللاعب إلى الوضع الذي اختاره -->
-    <script src="js/main.js"></script>
-    <script src="js/tutorial.js"></script>
-
-</body>
-</html>
+    try { nameInput.value = localStorage.getItem(NAME_KEY) || ''; } catch (error) { nameInput.value = ''; }
+    App.showWelcome();
+})();
