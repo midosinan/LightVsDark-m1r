@@ -15,7 +15,6 @@ const openGuide = document.querySelector('#open-guide');
 const closeGuide = document.querySelector('#close-guide');
 const bankToggle = document.querySelector('#bank-toggle');
 const battleShop = document.querySelector('#battle-shop');
-const shopTitle = document.querySelector('#shop-title');
 const bankInventory = document.querySelector('#bank-inventory');
 const graveyardInventory = document.querySelector('#graveyard-inventory');
 const bankShopChoice = document.querySelector('#shop-bank-choice');
@@ -74,6 +73,7 @@ const turnConfirmModal = document.querySelector('#turn-confirm-modal');
 const withdrawTurnButton = document.querySelector('#withdraw-turn-button');
 const continueTurnButton = document.querySelector('#continue-turn-button');
 const turnIndicatorLabel = document.querySelector('#turn-indicator-label');
+const turnStatusLabel = document.querySelector('#turn-status-label');
 const turnTimer = document.querySelector('#turn-timer');
 const turnAudioToggle = document.querySelector('#turn-audio-toggle');
 const turnAudioIcon = document.querySelector('#turn-audio-icon');
@@ -133,6 +133,7 @@ function notifyStateChange() { if (activeMode && activeMode.afterAction) activeM
 
 function setTurnIndicatorMessage(message) {
     turnIndicatorLabel.textContent = message;
+    turnStatusLabel.hidden = true;
 }
 
 function updateSoundToggle() {
@@ -1174,16 +1175,25 @@ function hideInsufficientGoldMessage() {
 function updateTurnIndicator() {
     if (isGameOver) return;
     const playerTeam = battleScreen.dataset.selectedTeam;
-    const opponentTeam = playerTeam === 'dark' ? 'light' : 'dark';
-    const activeTeam = isPlayerTurn ? playerTeam : opponentTeam;
     const playerTurnStarted = isPlayerTurn && lastAnnouncedPlayerTurn !== true;
     lastAnnouncedPlayerTurn = isPlayerTurn;
+    turnStatusLabel.hidden = false;
+    updateTurnIndicatorLanguage();
+    if (playerTurnStarted) announcePlayerTurnStart(playerTeam);
+}
+
+function updateTurnIndicatorLanguage() {
+    if (turnStatusLabel.hidden) return;
+    const playerTeam = battleScreen.dataset.selectedTeam;
+    const opponentTeam = playerTeam === 'dark' ? 'light' : 'dark';
+    const activeTeam = isPlayerTurn ? playerTeam : opponentTeam;
     lightPlayerBanner.classList.toggle('active-player', activeTeam === 'light');
     darkPlayerBanner.classList.toggle('active-player', activeTeam === 'dark');
-    const key = isPlayerTurn ? 'phaseYourTurn' : 'phaseOpponentTurn';
-    const fallback = isPlayerTurn ? `Round ${battlePhase} - Your Turn` : `Round ${battlePhase} - Opponent's Turn`;
-    setTurnIndicatorMessage(battleText(key, fallback).replace('{phase}', battlePhase));
-    if (playerTurnStarted) announcePlayerTurnStart(playerTeam);
+    turnIndicatorLabel.textContent = battleText('roundLabel', 'Round {phase}').replace('{phase}', battlePhase);
+    turnStatusLabel.textContent = battleText(
+        isPlayerTurn ? 'playerPlayingNow' : 'opponentPlayingNow',
+        isPlayerTurn ? "You're playing now" : 'Opponent is playing now'
+    );
 }
 
 // الخادم يخبر الطرفين بصاحب الدور. تقدّم الجولة والذهب لا يحدثان هنا،
@@ -2454,8 +2464,10 @@ function showHealModal(healerSlot) {
 }
 
 function setBankOpen(isOpen) {
-    setBankView(null);
-    if (isOpen) setGraveyardOpen(false);
+    if (isOpen) {
+        setBankView('bank');
+        setGraveyardOpen(false);
+    }
     battleShop.classList.toggle('shop-open', isOpen);
     battleShop.setAttribute('aria-hidden', String(!isOpen));
     bankToggle.setAttribute('aria-expanded', String(isOpen));
@@ -2468,11 +2480,6 @@ function setBankView(view) {
     graveyardInventory.hidden = !showGraveyard;
     bankShopChoice.setAttribute('aria-pressed', String(showBank));
     graveyardShopChoice.setAttribute('aria-pressed', String(showGraveyard));
-    shopTitle.textContent = showBank
-        ? battleText('bankCards', 'Bank Cards')
-        : showGraveyard
-            ? battleText('graveyardCards', 'Graveyard Cards')
-            : battleText('shopTitle', 'Bank Market');
     if (showGraveyard) renderGraveyardBankCards();
 }
 

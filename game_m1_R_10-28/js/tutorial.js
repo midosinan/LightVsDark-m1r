@@ -16,47 +16,82 @@
     const turnLabel = document.querySelector('#tutorial-turn');
     const market = document.querySelector('#tutorial-market');
     const marketCard = document.querySelector('#tutorial-market-card');
-    const AUTO_ADVANCE_MS = 10000;
+    const AUTO_ADVANCE_MS = 15000;
     let currentStep = 0;
     let autoAdvanceTimer = null;
     let isPaused = false;
     let lastFocusedElement = null;
 
     const scenes = [
-        { round: 1, turn: 'turnLight', lightGold: 5, darkGold: 5, lightHealth: 20, darkHealth: 20, lightCards: [], darkCards: [], highlight: 'scoreboard' },
-        { round: 1, turn: 'turnLight', lightGold: 5, darkGold: 5, lightHealth: 20, darkHealth: 20, lightCards: [], darkCards: [], highlight: 'scoreboard' },
         {
-            round: 1, turn: 'turnDark', lightGold: 2, darkGold: 2, lightHealth: 20, darkHealth: 20, highlight: 'field',
-            lightCards: [{ id: 'cunning-trader', health: 8, attack: 6, cost: 3 }],
-            darkCards: [{ id: 'dread-priest', health: 9, attack: 4, cost: 3 }]
+            round: 1, turn: 'turnLight', lightGold: 5, darkGold: 5, lightHealth: 20, darkHealth: 20,
+            lightCards: [], darkCards: [], highlight: 'toolbar', focus: 'hand'
         },
         {
-            round: 1, turn: 'turnResolve', lightGold: 2, darkGold: 2, lightHealth: 20, darkHealth: 20, highlight: 'field', attack: true,
-            lightCards: [{ id: 'cunning-trader', health: 4, attack: 6, cost: 3 }],
-            darkCards: [{ id: 'dread-priest', health: 3, attack: 4, cost: 3 }]
+            round: 1, turn: 'turnLight', lightGold: 5, darkGold: 5, lightHealth: 20, darkHealth: 20,
+            lightCards: [], darkCards: [], highlight: 'scoreboard', focus: 'scoreboard'
         },
         {
-            round: 2, turn: 'turnLight', lightGold: 6, darkGold: 4, lightHealth: 20, darkHealth: 20, highlight: 'field',
-            lightCards: [{ id: 'silent-neighbor', health: 8, attack: 3, cost: 2, blocked: true }],
-            darkCards: [{ id: 'dread-priest', health: 3, attack: 4, cost: 3 }]
+            round: 1, turn: 'turnDark', lightGold: 2, darkGold: 2, lightHealth: 20, darkHealth: 20,
+            lightCards: [{ id: 'cunning-trader', health: 8, attack: 6, cost: 3, feature: 'trader' }],
+            darkCards: [{ id: 'dread-priest', health: 9, attack: 4, cost: 3, feature: 'priest' }],
+            highlight: 'field', focus: 'hand'
         },
         {
-            round: 2, turn: 'turnLight', lightGold: 6, darkGold: 4, lightHealth: 20, darkHealth: 20, highlight: 'scoreboard',
-            lightCards: [{ id: 'silent-neighbor', health: 8, attack: 3, cost: 2, blocked: true }],
-            darkCards: [{ id: 'dread-priest', health: 3, attack: 4, cost: 3 }]
+            round: 1, turn: 'turnResolve', lightGold: 2, darkGold: 2, lightHealth: 20, darkHealth: 20,
+            lightCards: [{ id: 'cunning-trader', health: 4, attack: 6, cost: 3, feature: 'trader' }],
+            darkCards: [{ id: 'dread-priest', health: 3, attack: 4, cost: 3, feature: 'priest' }],
+            highlight: 'field', focus: 'attack', attack: true
         },
         {
-            round: 3, turn: 'turnLight', lightGold: 6, darkGold: 7, lightHealth: 20, darkHealth: 20, highlight: 'market', showMarket: true,
-            lightCards: [{ id: 'silent-neighbor', health: 8, attack: 3, cost: 2, blocked: true }],
-            darkCards: [{ id: 'dread-priest', health: 3, attack: 4, cost: 3 }],
+            round: 3, turn: 'turnLight', lightGold: 6, darkGold: 9, lightHealth: 20, darkHealth: 14,
+            lightCards: [{ id: 'cunning-trader', health: 4, attack: 6, cost: 3, feature: 'trader' }],
+            darkCards: [{ id: 'silent-neighbor', health: 8, attack: 3, cost: 2, feature: 'silence' }],
+            highlight: 'market', focus: 'bank', showMarket: true,
             marketCard: { id: 'forced-tax', cost: 3 }
         },
         {
-            round: 4, turn: 'turnDark', lightGold: 7, darkGold: 9, lightHealth: 20, darkHealth: 20, highlight: 'scoreboard',
-            lightCards: [{ id: 'silent-neighbor', health: 8, attack: 3, cost: 2, blocked: true }, { id: 'forced-tax', health: 10, attack: 4, cost: 1, bank: true }],
-            darkCards: [{ id: 'dread-priest', health: 3, attack: 4, cost: 3 }]
+            round: 3, turn: 'turnLight', lightGold: 7, darkGold: 8, lightHealth: 18, darkHealth: 14,
+            lightCards: [
+                { id: 'light-healer', health: 8, attack: 1, cost: 2, feature: 'healer' },
+                { id: 'forced-tax', health: 10, attack: 4, cost: 1, bank: true, feature: 'tax' }
+            ],
+            darkCards: [{ id: 'silent-neighbor', health: 8, attack: 3, cost: 2, feature: 'silence' }],
+            highlight: 'scoreboard', focus: 'exchange', exchange: true
+        },
+        {
+            round: 3, turn: 'turnDark', lightGold: 7, darkGold: 8, lightHealth: 18, darkHealth: 14,
+            lightCards: [
+                { id: 'cunning-trader', health: 4, attack: 6, cost: 3, feature: 'trader', blocked: true },
+                { id: 'light-healer', health: 8, attack: 1, cost: 2, feature: 'healer' }
+            ],
+            darkCards: [{ id: 'silent-neighbor', health: 8, attack: 3, cost: 2, feature: 'silence' }],
+            highlight: 'field', focus: 'graveyard'
+        },
+        {
+            round: 4, turn: 'turnLight', lightGold: 10, darkGold: 7, lightHealth: 18, darkHealth: 8,
+            lightCards: [
+                { id: 'light-shield', health: 7, attack: 4, cost: 7, feature: 'shield' },
+                { id: 'cunning-trader', health: 4, attack: 6, cost: 3, feature: 'trader' },
+                { id: 'falcon', health: 10, attack: 3, cost: 2, feature: 'falcon' },
+                { id: 'vault-guardian', health: 13, attack: 8, cost: 4, feature: 'vault' }
+            ],
+            darkCards: [{ id: 'hell-dragon', health: 15, attack: 8, cost: 6, feature: 'dragon' }],
+            highlight: 'field', focus: 'hand'
+        },
+        {
+            round: 5, turn: 'turnLight', lightGold: 10, darkGold: 4, lightHealth: 16, darkHealth: 3,
+            lightCards: [{ id: 'cunning-trader', health: 4, attack: 6, cost: 3, feature: 'trader' }],
+            darkCards: [], highlight: 'field', focus: 'attack', leaderAttack: true
+        },
+        {
+            round: 5, turn: 'turnResolve', lightGold: 10, darkGold: 4, lightHealth: 16, darkHealth: 0,
+            lightCards: [{ id: 'cunning-trader', health: 4, attack: 6, cost: 3, feature: 'trader' }],
+            darkCards: [], highlight: 'result', focus: 'endTurn', result: 'light'
         }
     ];
+
+    const controlKeys = ['bank', 'exchange', 'luck', 'hand', 'graveyard', 'attack', 'endTurn'];
 
     function getLanguage() {
         return document.documentElement.getAttribute('lang') || 'en';
@@ -103,6 +138,13 @@
         cost.textContent = `◉ ${card.cost}`;
 
         element.append(image, name, stats, cost);
+        if (card.feature) {
+            const feature = document.createElement('small');
+            feature.className = 'tutorial-card-effect';
+            feature.textContent = getTutorialText(`cardFeatures.${card.feature}`);
+            element.append(feature);
+            element.title = feature.textContent;
+        }
         if (card.blocked) {
             const blocked = document.createElement('span');
             blocked.className = 'tutorial-card-blocked';
@@ -150,6 +192,7 @@
         const scene = scenes[currentStep];
         const step = steps[currentStep];
 
+        if (!step) throw new Error(`Missing tutorial translation for step ${currentStep + 1} (${language}).`);
         stepCount.textContent = `${currentStep + 1} / ${scenes.length}`;
         stepTitle.textContent = step.title;
         stepMessage.textContent = step.message;
@@ -163,9 +206,28 @@
 
         market.hidden = !scene.showMarket;
         renderMarketCard(scene.marketCard);
-        document.querySelector('#tutorial-board').dataset.highlight = scene.highlight;
+        const board = document.querySelector('#tutorial-board');
+        board.dataset.highlight = scene.highlight;
+        board.classList.toggle('has-attack', Boolean(scene.attack || scene.leaderAttack));
+        board.classList.toggle('has-leader-attack', Boolean(scene.leaderAttack));
+        board.classList.toggle('has-result', Boolean(scene.result));
+        board.dataset.focus = scene.focus || '';
+        document.querySelector('#tutorial-exchange').hidden = !scene.exchange;
+        document.querySelector('#tutorial-result').hidden = !scene.result;
+        if (scene.exchange) {
+            document.querySelector('#tutorial-exchange').textContent = getTutorialText('exchangeExample');
+        }
+        if (scene.result) {
+            document.querySelector('#tutorial-result').textContent = getTutorialText('victory');
+        }
         document.querySelector('#tutorial-scoreboard').dataset.highlight = scene.highlight;
-        document.querySelector('#tutorial-board').classList.toggle('has-attack', Boolean(scene.attack));
+        const controls = translationsForLanguage.selection.tutorial.controls;
+        for (const key of controlKeys) {
+            const control = document.querySelector(`[data-tutorial-control="${key}"]`);
+            control.querySelector('strong').textContent = controls[key].title;
+            control.querySelector('small').textContent = controls[key].description;
+        }
+        document.querySelector('#tutorial-toolbar').setAttribute('aria-label', getTutorialText('controlsLabel'));
         backButton.disabled = currentStep === 0;
         nextButton.textContent = currentStep === scenes.length - 1 ? getTutorialText('restart') : getTutorialText('next');
         stepProgress.setAttribute('aria-valuemax', String(scenes.length));

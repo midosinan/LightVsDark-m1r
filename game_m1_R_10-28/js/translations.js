@@ -85,6 +85,29 @@ const translations = {
                 market: "Round 3: the Bank Market opens",
                 playing: "DEMO PLAYING",
                 paused: "DEMO PAUSED",
+                controlsLabel: "Important game controls",
+                exchangeExample: "Both exchanges are available once per round: give up 2 leader health for 5 gold, or spend 3 gold for 6 health. Light heals an on-field Healer; Dark heals its leader.",
+                victory: "LIGHT VICTORY! The Dark leader has 0 health. The match ends when a leader reaches 0 health, or when a team reaches 30 gold.",
+                controls: {
+                    bank: { title: "Bank", description: "Buy cards and recover cards." },
+                    exchange: { title: "Exchanges", description: "Trade gold and leader health." },
+                    luck: { title: "Game of Luck", description: "Spend 2 gold for a random result." },
+                    hand: { title: "Hand", description: "View cards ready to deploy." },
+                    graveyard: { title: "Graveyard", description: "See defeated cards." },
+                    attack: { title: "Card actions", description: "Attack or use a special ability." },
+                    endTurn: { title: "End turn", description: "Finish your actions and pass play." }
+                },
+                cardFeatures: {
+                    trader: "Earns +1 gold each round.",
+                    priest: "An affordable, balanced fighter.",
+                    silence: "Blocks an enemy attack for a turn.",
+                    healer: "Heal an ally or leader by 2; healer loses 2 health.",
+                    tax: "Opponent loses 1 gold each round.",
+                    shield: "Protects your leader from damage.",
+                    falcon: "Protects the Light Healer from attacks.",
+                    vault: "Stops Forced Tax and Bankruptcy drains.",
+                    dragon: "Very high health and attack."
+                },
                 previous: "Previous",
                 next: "Next",
                 pause: "Pause",
@@ -93,14 +116,16 @@ const translations = {
                 close: "Close tutorial",
                 restart: "Watch again",
                 steps: [
-                    { title: "Welcome to the battlefield", message: "Watch the Light and Dark computers play. The match is shown one step at a time; pause, go back, or continue whenever you like." },
-                    { title: "Your resources", message: "Each leader begins with 20 health and each team starts with 5 gold. Gold is limited, so check a card's price before spending." },
-                    { title: "Summon cards", message: "The Light computer spends 3 gold to summon the Cunning Trader. The Dark computer answers with a 3-gold fighter. Cards occupy battlefield slots and have their own health and attack." },
-                    { title: "Choose an attack", message: "On its turn, a computer picks an available enemy card and attacks. The target loses health, and an attack can also expose the attacker to a counterattack." },
-                    { title: "Special abilities matter", message: "The Silent Neighbor can block an enemy card from attacking on its next turn. Special cards can change the plan, so read each card's information before using it." },
-                    { title: "End your turn and earn income", message: "When a turn ends, remaining actions resolve and play passes to the other team. At the start of later rounds, both teams receive less gold: 4, then 3, 2, 1, and finally no income." },
-                    { title: "Visit the Bank Market", message: "The Bank Market opens in round 3. Buy a unique Bank card with gold; after buying it, deploying it from your hand costs only 1 gold. Compare its effect and price before purchasing." },
-                    { title: "How to win", message: "Reduce the opposing leader's health to zero for a military victory, or reach 30 gold for an economic victory. Protect your leader, spend carefully, and use End Turn when you are done." }
+                    { title: "Start with your Hand", message: "The Hand button is highlighted first: use it to view the cards ready to play. The Bank opens purchases and graveyard recovery; Exchanges trade gold and leader health; Luck costs 2 gold; Graveyard lists defeated cards; card buttons attack or use special abilities; End Turn passes play. The lesson controls below move backward, forward, pause, or exit." },
+                    { title: "Health, gold, and the round", message: "Both leaders start with 20 health and each side starts with 5 gold. Health reaching 0 means defeat; gold pays for cards and actions. Income decreases by round: 5 at the start, then 4, 3, 2, 1, and no regular income from round 6 onward. Watch both numbers before spending." },
+                    { title: "Play cards and use their strengths", message: "A card in your hand costs gold to deploy into an empty battlefield slot. Here the Cunning Trader costs 3 and earns its team +1 gold at the end of each round while it survives. The Dread Priest is a cheaper, balanced fighter; compare health and attack before choosing what to summon." },
+                    { title: "Attack carefully", message: "When a card can attack, choose its attack action and select a legal enemy target. The Trader's 6 attack reduces the Priest from 9 health to 3; the Priest's 4 attack then reduces the Trader from 8 to 4. A defender can counterattack, so consider the health left on both cards." },
+                    { title: "Shop at the Bank", message: "The Bank opens from round 3. This example buys Forced Tax for 3 gold, then deploys it from the hand for just 1 more gold. While it stays on the battlefield, the opponent loses 1 gold at the end of each round. Bank cards are unique while owned, so choose an effect that fits your plan." },
+                    { title: "Exchange health and gold", message: "Both exchanges are available once per round. If you need money, sacrifice 2 leader health for 5 gold; never do this if it puts your leader at risk. The reverse exchange spends 3 gold for 6 health: it heals the Light Healer for Light, or the leader for Dark. The Healer's own ability can restore 2 health to an ally or leader by losing 2 of its own health." },
+                    { title: "Abilities, hand, and graveyard", message: "The Silent Neighbor can silence an enemy attacker for its next turn, but cannot block the non-attacking Healer. A defeated card moves to the Graveyard; open the Bank, choose Graveyard, and pay its listed cost to recover an eligible card. The Falcon protects the Healer, the Vault Guardian stops certain gold drains, and the Light Shield protects its leader." },
+                    { title: "Build an advantage", message: "Rounds keep adding income, but the amount falls and cards can be removed. The Hell Dragon has enormous health and attack, so avoid sending a weaker card into it without a plan. The Falcon protects the Healer, the Vault Guardian blocks Forced Tax and Bankruptcy drains, and the Light Shield protects its leader. Use these abilities to keep your options open." },
+                    { title: "Clear the way to the leader", message: "Once the enemy battlefield is clear, a surviving attacker can strike the opposing leader directly. In this example the Dark leader is down to 3 health and the Trader has 6 attack: one successful hit is enough. If blockers remain, defeat or work around them first." },
+                    { title: "Victory!", message: "The Light team wins this demonstration: the Dark leader reaches 0 health, so the match ends and Dark loses. A team can also win economically by reaching 30 gold. Protect your leader, watch the opponent's resources, and spend each turn with a purpose." }
                 ]
             },
             backButton: "Back",
@@ -153,6 +178,9 @@ const translations = {
             opponentTurn: "Opponent's Turn",
             muteSounds: "Mute sound effects",
             enableSounds: "Enable sound effects",
+            roundLabel: "Round {phase}",
+            playerPlayingNow: "You're playing now",
+            opponentPlayingNow: "Opponent is playing now",
             phaseYourTurn: "Round {phase} - Your Turn",
             phaseOpponentTurn: "Round {phase} - Opponent's Turn",
             battlefield: "Battlefield",
@@ -417,9 +445,10 @@ const translations = {
             goldToHealth2: "This feature is available from the bank market (once per turn), or as an emergency window if you can't execute any move and don't have enough gold.",
             goldToHealth3: "Your leader's health must be more than 2 to be able to sacrifice.",
             victory: "Victory Conditions",
-            victoryDesc: "The system announces the result automatically when one of these conditions is met:",
+            victoryDesc: "The system determines the result automatically based on these conditions:",
             victory1: "<strong>Military Victory:</strong> Opponent leader health reaches <strong>0</strong>.",
             victory2: "<strong>Economic Victory:</strong> Your gold reaches <strong>30</strong> pieces in your treasury.",
+            victory3: "Whenever a player loses a card, their leader loses <strong>5 health</strong>. If the leader's health reaches <strong>0</strong>, their team loses.",
             connection: "Connection and Disconnection",
             connection1: "Turn indicator shows when you can execute commands.",
             connection2: "If disconnected, reopen the match or click back then join again.",
@@ -511,6 +540,29 @@ const translations = {
                 market: "الجولة 3: يفتح سوق البنك",
                 playing: "المشهد يعمل",
                 paused: "المشهد متوقف",
+                controlsLabel: "أزرار اللعب المهمة",
+                exchangeExample: "كلا الاستبدالين متاح مرة واحدة في الجولة: ضحِّ بنقطتي صحة للقائد لتحصل على 5 ذهب، أو أنفق 3 ذهب لاستعادة 6 صحة. يعالج النور بطاقة المعالجة في الساحة، ويعالج الظلام قائده.",
+                victory: "فوز فريق النور! وصلت صحة قائد الظلام إلى صفر. تنتهي المباراة بوصول صحة قائد إلى صفر، أو بجمع فريق 30 قطعة ذهب.",
+                controls: {
+                    bank: { title: "البنك", description: "شراء بطاقات واستعادة بطاقات." },
+                    exchange: { title: "الاستبدال", description: "مبادلة الذهب وصحة القائد." },
+                    luck: { title: "لعبة الحظ", description: "تكلف 2 ذهب ونتيجتها عشوائية." },
+                    hand: { title: "اليد", description: "عرض البطاقات الجاهزة للإنزال." },
+                    graveyard: { title: "المقبرة", description: "عرض البطاقات المهزومة." },
+                    attack: { title: "حركات البطاقات", description: "هجوم أو استخدام قدرة خاصة." },
+                    endTurn: { title: "إنهاء الدور", description: "إنهاء حركاتك وتمرير اللعب." }
+                },
+                cardFeatures: {
+                    trader: "يمنح +1 ذهب في كل جولة.",
+                    priest: "مقاتل اقتصادي ومتوازن.",
+                    silence: "يمنع هجوم بطاقة معادية لدور.",
+                    healer: "يعالج حليفًا أو القائد بنقطتين مقابل نقطتي صحة منه.",
+                    tax: "يخسر الخصم 1 ذهب كل جولة.",
+                    shield: "يحمي قائد فريقك من الضرر.",
+                    falcon: "يحمي معالجة النور من الهجمات.",
+                    vault: "يمنع استنزاف الضريبة القسرية والإفلاس.",
+                    dragon: "يمتلك صحة وهجومًا مرتفعين جدًا."
+                },
                 previous: "السابق",
                 next: "التالي",
                 pause: "إيقاف مؤقت",
@@ -519,14 +571,16 @@ const translations = {
                 close: "إغلاق الشرح",
                 restart: "مشاهدة مرة أخرى",
                 steps: [
-                    { title: "أهلًا بك في ساحة المعركة", message: "شاهد فريقي النور والظلام وهما يلعبان. تتقدم المباراة خطوة خطوة؛ أوقفها مؤقتًا أو ارجع أو تابع في أي وقت." },
-                    { title: "مواردك", message: "يبدأ كل قائد بصحة 20، ويحصل كل فريق على 5 قطع ذهب. الذهب محدود، لذا تحقق من تكلفة البطاقة قبل إنفاقه." },
-                    { title: "إنزال البطاقات", message: "ينفق كمبيوتر النور 3 ذهب لإنزال التاجر الماكر، ويرد كمبيوتر الظلام بمقاتل تكلفته 3 ذهب. تشغل البطاقات خانات الساحة ولكل منها صحة وهجوم." },
-                    { title: "اختر هدف الهجوم", message: "في دوره يختار الكمبيوتر بطاقة متاحة من بطاقات الخصم ويهاجمها. تنقص صحة الهدف، وقد يتلقى المهاجم ضربة مضادة أيضًا." },
-                    { title: "انتبه للقدرات الخاصة", message: "يستطيع الجار الصامت منع بطاقة من الخصم من الهجوم في دورها التالي. قد تغير البطاقات الخاصة خطتك، فاقرأ معلومات البطاقة قبل استخدامها." },
-                    { title: "إنهاء الدور وكسب الذهب", message: "عند إنهاء الدور تُنفذ الحركات المتبقية ثم ينتقل اللعب للفريق الآخر. في بداية الجولات التالية يقل الذهب الذي يحصل عليه الفريقان: 4 ثم 3 ثم 2 ثم 1 وبعدها يتوقف." },
-                    { title: "استخدم سوق البنك", message: "يفتح سوق البنك في الجولة الثالثة. اشترِ بطاقة فريدة من البنك بالذهب؛ وبعد شرائها يكلف إنزالها من يدك قطعة ذهب واحدة فقط. قارن بين تأثيرها وسعرها قبل الشراء." },
-                    { title: "كيف تفوز؟", message: "اخفض صحة قائد الخصم إلى صفر لتحقيق نصر عسكري، أو اجمع 30 قطعة ذهب لتحقيق نصر اقتصادي. احمِ قائدك، وأنفق بحكمة، واضغط إنهاء الدور عندما تنتهي." }
+                    { title: "ابدأ بزر اليد", message: "زر اليد هو أول ما نبرزه: اضغطه لعرض الكروت الجاهزة للعب. البنك للشراء واستعادة كروت المقبرة؛ الاستبدال لمبادلة الذهب وصحة القائد؛ الحظ يكلف قطعتين ذهب؛ المقبرة تعرض الكروت المهزومة؛ أزرار الكروت تنفذ الهجوم أو القدرة الخاصة؛ وإنهاء الدور يمرر اللعب. أزرار الشرح أسفل النافذة للرجوع والتقدم والإيقاف والخروج." },
+                    { title: "الصحة والذهب والجولة", message: "يبدأ القائدان بصحة 20 ويبدأ كل فريق بـ5 ذهب. وصول الصحة إلى صفر يعني الخسارة، والذهب يدفع تكلفة الكروت والحركات. يقل الدخل حسب الجولة: 5 في البداية، ثم 4 و3 و2 و1، ويتوقف الدخل المعتاد من الجولة السادسة. راقب الرقمين قبل الإنفاق." },
+                    { title: "أنزل الكروت واستفد من مزاياها", message: "تكلف البطاقة ذهبًا لإنزالها من يدك إلى خانة فارغة في الساحة. هنا يكلف التاجر الماكر 3 ذهب ويمنح فريقه +1 ذهب في نهاية كل جولة ما دام حيًا. أما كاهن الرعب فمقاتل متوازن وأقل تكلفة؛ قارن الصحة والهجوم قبل الاختيار." },
+                    { title: "هاجم بحذر", message: "عندما تستطيع البطاقة الهجوم، اختر أمر الهجوم ثم هدفًا معاديًا مسموحًا. هجوم التاجر بقوة 6 يخفض صحة الكاهن من 9 إلى 3؛ ثم يخفض هجوم الكاهن بقوة 4 صحة التاجر من 8 إلى 4. قد يرد المدافع بالهجوم، لذا انتبه لما تبقى من صحة البطاقتين." },
+                    { title: "تسوّق من البنك", message: "يفتح البنك ابتداءً من الجولة الثالثة. في هذا المثال تُشترى بطاقة الضريبة القسرية بـ3 ذهب، ثم يكلف إنزالها من اليد ذهبًا واحدًا فقط. ما دامت في الساحة يخسر الخصم ذهبًا واحدًا في نهاية كل جولة. بطاقات البنك فريدة ما دامت مملوكة، فاختر ما يناسب خطتك." },
+                    { title: "استبدل الصحة بالذهب أو العكس", message: "كلا الاستبدالين متاح مرة واحدة في الجولة. عند الحاجة للمال، ضحِّ بنقطتي صحة للقائد لتحصل على 5 ذهب؛ لا تفعل ذلك إن كان سيعرّض قائدك للخطر. الاستبدال العكسي ينفق 3 ذهب لاستعادة 6 صحة: يعالج بطاقة معالجة النور لفريق النور، ويعالج القائد لفريق الظلام. كما تستطيع المعالجة نفسها إعادة نقطتي صحة لحليف أو للقائد مقابل خسارة نقطتي صحة منها." },
+                    { title: "القدرات واليد والمقبرة", message: "يستطيع الجار الصامت منع مهاجم معادٍ من الهجوم في دوره التالي، لكنه لا يمنع المعالجة لأنها لا تهاجم. تنتقل البطاقة المهزومة إلى المقبرة؛ افتح البنك ثم اختر المقبرة وادفع التكلفة الظاهرة لاستعادة بطاقة مؤهلة. الصقر يحمي المعالجة، وحارس الخزنة يمنع بعض خسائر الذهب، ودرع النور يحمي قائده." },
+                    { title: "كوّن أفضلية", message: "تستمر الجولات لكن دخل الذهب يقل، وقد تُهزم بطاقاتك. يمتلك تنين الجحيم صحة وهجومًا هائلين، فلا ترسل بطاقة أضعف إليه دون خطة. يحمي الصقر المعالجة، ويوقف حارس الخزنة استنزاف الضريبة القسرية ولعنة الإفلاس، ويحمي درع النور قائده. استغل هذه القدرات لتحافظ على خياراتك." },
+                    { title: "افتح الطريق إلى القائد", message: "بعد إخلاء ساحة الخصم، يستطيع المهاجم الباقي ضرب القائد مباشرة. في المثال بقيت لقائد الظلام 3 صحة، وقوة هجوم التاجر 6؛ لذا تكفي ضربة ناجحة واحدة. إذا بقيت بطاقات تحجب الطريق، اهزمها أو تعامل معها أولًا." },
+                    { title: "انتصار!", message: "فاز فريق النور في هذه المباراة التوضيحية: وصلت صحة قائد الظلام إلى صفر، فانتهت المباراة وخسر فريق الظلام. ويمكن الفوز اقتصاديًا أيضًا بجمع 30 ذهب. احمِ قائدك، وراقب موارد خصمك، واجعل لكل دور هدفًا." }
                 ]
             },
             backButton: "رجوع",
@@ -579,6 +633,9 @@ const translations = {
             opponentTurn: "دور الخصم",
             muteSounds: "كتم المؤثرات الصوتية",
             enableSounds: "تشغيل المؤثرات الصوتية",
+            roundLabel: "المرحلة {phase}",
+            playerPlayingNow: "أنت تلعب الآن",
+            opponentPlayingNow: "الخصم يلعب الآن",
             phaseYourTurn: "المرحلة {phase} - دورك",
             phaseOpponentTurn: "المرحلة {phase} - دور الخصم",
             battlefield: "ساحة المعركة",
@@ -846,9 +903,10 @@ const translations = {
             goldToHealth2: "تتاح هذه الميزة من سوق البنك (مرة واحدة في الجولة)، أو كنافذة طوارئ إذا عجزت عن تنفيذ أي حركة ولم تملك ذهباً كافياً.",
             goldToHealth3: "يشترط أن تكون صحة قائدك أكثر من 2 لتتمكن من التضحية.",
             victory: "شروط الفوز",
-            victoryDesc: "يعلن النظام النتيجة تلقائيًا عند تحقق أحد الشرطين:",
+            victoryDesc: "يعلن النظام النتيجة تلقائيًا عند تحقق أحد شروط الفوز أو الخسارة التالية:",
             victory1: "<strong>النصر العسكري:</strong> وصول صحة قائد الخصم إلى <strong>0</strong>.",
             victory2: "<strong>النصر الاقتصادي:</strong> وصول ذهبك إلى <strong>30</strong> قطعة داخل خزنتك.",
+            victory3: "عند خسارة أي لاعب بطاقة، تنقص صحة قائده <strong>5 نقاط</strong>؛ وإذا وصلت صحة القائد إلى <strong>0</strong>، يخسر فريقه.",
             connection: "الاتصال والانقطاع",
             connection1: "يظهر مؤشر الدور لتعرف متى يمكنك تنفيذ الأوامر.",
             connection2: "إذا انقطع اتصالك، أعد فتح المباراة أو اضغط العودة ثم انضم مجددًا.",
@@ -1020,8 +1078,7 @@ function updateTexts(lang) {
     const darkTeamH1 = document.querySelector('#dark-player-banner h1');
     if (darkTeamH1) darkTeamH1.textContent = t.battle.darkTeam;
     
-    const turnIndicator = document.querySelector('#turn-indicator-label');
-    if (turnIndicator) turnIndicator.textContent = t.battle.turn;
+    if (typeof updateTurnIndicatorLanguage === 'function') updateTurnIndicatorLanguage();
     
     const arenaTitle = document.querySelector('.arena-title');
     if (arenaTitle) arenaTitle.textContent = t.battle.battlefield;

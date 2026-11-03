@@ -270,6 +270,7 @@
                 <ol>
                     <li data-i18n="guide.victory1"><strong>Military Victory:</strong> Opponent leader health reaches <strong>0</strong>.</li>
                     <li data-i18n="guide.victory2"><strong>Economic Victory:</strong> Your gold reaches <strong>30</strong> pieces in your treasury.</li>
+                    <li data-i18n="guide.victory3">Whenever a player loses a card, their leader loses 5 health. If the leader's health reaches 0, their team loses.</li>
                 </ol>
 
                 <h3 data-i18n="guide.connection">Connection and Disconnection</h3>
@@ -318,6 +319,17 @@
                     <div class="tutorial-side-title" data-i18n="selection.tutorial.lightTeam">Light Computer</div>
                     <div class="tutorial-card-row" data-tutorial-cards="light"></div>
                 </section>
+                <div class="tutorial-toolbar" id="tutorial-toolbar" role="group">
+                    <div class="tutorial-control" data-tutorial-control="bank"><span>🏦</span><strong></strong><small></small></div>
+                    <div class="tutorial-control" data-tutorial-control="exchange"><span>⇄</span><strong></strong><small></small></div>
+                    <div class="tutorial-control" data-tutorial-control="luck"><span>🎲</span><strong></strong><small></small></div>
+                    <div class="tutorial-control" data-tutorial-control="hand"><span>🃏</span><strong></strong><small></small></div>
+                    <div class="tutorial-control" data-tutorial-control="graveyard"><span>⚰</span><strong></strong><small></small></div>
+                    <div class="tutorial-control" data-tutorial-control="attack"><span>⚔</span><strong></strong><small></small></div>
+                    <div class="tutorial-control" data-tutorial-control="endTurn"><span>⏭</span><strong></strong><small></small></div>
+                </div>
+                <div class="tutorial-exchange" id="tutorial-exchange" hidden></div>
+                <div class="tutorial-result" id="tutorial-result" hidden></div>
                 <div class="tutorial-market" id="tutorial-market" hidden>
                     <span data-i18n="selection.tutorial.market">Round 3: the Bank Market opens</span>
                     <div class="tutorial-market-card" id="tutorial-market-card"></div>
@@ -331,7 +343,7 @@
                 <h3 id="tutorial-step-title"></h3>
                 <p id="tutorial-step-message"></p>
             </article>
-            <div class="tutorial-progress" role="progressbar" aria-label="Tutorial progress" aria-valuemin="1" aria-valuemax="8" aria-valuenow="1">
+            <div class="tutorial-progress" role="progressbar" aria-label="Tutorial progress" aria-valuemin="1" aria-valuemax="10" aria-valuenow="1">
                 <span id="tutorial-progress-bar"></span>
             </div>
             <footer class="tutorial-controls">
@@ -412,6 +424,9 @@
             </div>
         </div>
         <button type="button" class="battle-back-button" id="battle-back-button" aria-label="العودة إلى اختيار الفريق" title="العودة إلى اختيار الفريق">↩</button>
+        <button type="button" class="battle-screen-mode-button" id="battle-screen-mode-button" aria-label="تفعيل ملء الشاشة" title="تفعيل ملء الشاشة">
+            <span class="material-symbols-rounded" id="battle-screen-mode-icon" aria-hidden="true">fullscreen</span>
+        </button>
 
         <header class="battle-header">
             <section class="player-banner light-banner" id="light-player-banner">
@@ -423,7 +438,8 @@
                 </div>
             </section>
             <div class="turn-indicator">
-                <span id="turn-indicator-label" data-i18n="battle.turn">Your Turn</span>
+                <span id="turn-indicator-label">Round 1</span>
+                <small id="turn-status-label" hidden></small>
                 <span id="turn-timer" class="turn-timer" hidden aria-live="off"></span>
                 <button type="button" class="turn-audio-toggle" id="turn-audio-toggle" aria-pressed="true" aria-label="Mute sound effects" title="Mute sound effects" data-i18n-aria-label="battle.muteSounds" data-i18n-title="battle.muteSounds">
                     <span class="material-symbols-rounded" id="turn-audio-icon" aria-hidden="true">volume_up</span>
@@ -485,15 +501,12 @@
         </div>
 
         <aside class="battle-shop" id="battle-shop" aria-hidden="true">
-            <div class="battle-shop-header">
-                <h2 id="shop-title" data-i18n="battle.shopTitle">Bank Market</h2>
+            <div class="shop-choices" role="group" aria-label="Shop category">
+                <button type="button" class="shop-choice" id="shop-bank-choice" aria-pressed="true" data-i18n="battle.buyFromBank">Buy cards from the Bank</button>
+                <button type="button" class="shop-choice" id="shop-graveyard-choice" aria-pressed="false" data-i18n="battle.recoverFromGraveyard">Recover cards from the Graveyard</button>
                 <button type="button" class="shop-close" id="shop-close" data-i18n-aria-label="battle.shopClose" aria-label="Close Bank Market">✕</button>
             </div>
-            <div class="shop-choices" role="group" aria-label="Shop category">
-                <button type="button" class="shop-choice" id="shop-bank-choice" aria-pressed="false" data-i18n="battle.buyFromBank">Buy cards from the Bank</button>
-                <button type="button" class="shop-choice" id="shop-graveyard-choice" aria-pressed="false" data-i18n="battle.recoverFromGraveyard">Recover cards from the Graveyard</button>
-            </div>
-            <section class="shop-inventory" id="bank-inventory" hidden>
+            <section class="shop-inventory" id="bank-inventory">
                 <div class="bank-cards" aria-label="Bank Cards" data-i18n-aria-label="battle.bankCards">
                     <button type="button" class="bank-card" data-bank-cost="4" data-bank-name="بعث الارواح" data-card-health="10" data-card-attack="3" title="While on the battlefield, prevents the opponent from deploying Silent Neighbor. If Silent Neighbor is already there, destroys it immediately without taking damage." data-i18n-title="battle.bankCardDescriptions.resurrect"><img src="assets/images/bank-cards/resurrect.jpg" alt="Resurrect" data-i18n-alt="battle.bankCards.resurrect"><span data-i18n="battle.bankResurrect">Resurrect</span><small>◉ 4</small></button>
                     <button type="button" class="bank-card" data-bank-cost="5" data-bank-name="جيش المرتزقة" data-card-health="8" data-card-attack="10" title="A hired fighter with 8 health and 10 attack." data-i18n-title="battle.bankCardDescriptions.mercenary"><img src="assets/images/bank-cards/mercenary-army.jpg" alt="Mercenary Army" data-i18n-alt="battle.bankCards.mercenary"><span data-i18n="battle.bankMercenary">Mercenary Army</span><small>◉ 5</small></button>

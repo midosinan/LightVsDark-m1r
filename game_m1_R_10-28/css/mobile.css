@@ -48,14 +48,22 @@
 }
 
 .tutorial-round strong { font-size: 18px; }
-.tutorial-board { gap: 12px; min-height: 190px; padding: 10px 5px; }
+.tutorial-board { grid-template-columns: minmax(0, 1fr); gap: 12px; min-height: 190px; padding: 10px 5px; }
+.tutorial-side.dark,
+.tutorial-side.light { grid-column: 1; }
 .tutorial-card-row { grid-template-columns: repeat(4, minmax(0, 56px)); gap: 5px; }
 .tutorial-slot { max-height: 88px; }
 .tutorial-card-name { font-size: 7px; }
 .tutorial-card small { font-size: 7px; }
+.tutorial-card-effect { font-size: 6px !important; }
 .tutorial-card-cost { font-size: 7px; }
 .tutorial-card-blocked { top: 2px; left: 2px; width: 16px; height: 16px; font-size: 10px; }
-.tutorial-market { right: 4px; bottom: 4px; gap: 5px; padding: 5px; font-size: 9px; }
+.tutorial-toolbar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.tutorial-control { padding: 5px 3px; }
+.tutorial-control > span { font-size: 18px; }
+.tutorial-control strong { font-size: 10px; }
+.tutorial-control small { font-size: 9px; }
+.tutorial-market { right: auto; bottom: auto; gap: 5px; padding: 5px; font-size: 9px; }
 .tutorial-market-card { gap: 3px; }
 .tutorial-market-card img { width: 20px; height: 28px; }
 .tutorial-market-card strong { max-width: 72px; }
@@ -307,29 +315,27 @@
         display: none !important;
     }
 
-    /* ------------------------------------------------------------ سوق البنك: لوحة جانبية بنصف عرض الشاشة */
+    /* ------------------------------------------------------------ سوق البنك: لوحة جانبية تحيط بمحتواها */
     .battle-shop {
         top: 2vh;
         right: 0;
         bottom: auto;
         left: auto;
-        width: 50vw;
-        max-width: 50vw;
-        height: 89vh;
-        min-height: 0;
+        width: 40vw;
+        min-width: 0;
+        max-width: calc(100vw - 12px);
+        height: auto;
+        max-height: calc(100vh - 4vh);
         padding: 6px 4px 8px;
         overflow-y: auto;
         z-index: 1000;
     }
-    .battle-shop-header { position: relative; font-size: 11px; }
-    .shop-choices { gap: 2px; margin: 4px 0; }
-    .battle-shop .shop-choice { min-height: 30px; padding: 2px 1px; font-size: 8px; }
-    .shop-close {
-        display: flex;
-        position: absolute;
-        top: -4px;
-        left: 0;
-        font-size: 9px;
+    .shop-choices { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin: 0 0 6px; }
+    .battle-shop .shop-choice { min-height: 34px; margin: 0; padding: 3px 2px; font-size: 8px; }
+    .battle-shop .shop-close {
+        width: auto;
+        min-height: 34px;
+        font-size: 14px;
     }
     .graveyard-shop-title { margin-top: 6px; font-size: 10px; }
     .graveyard-bank-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; }
@@ -510,6 +516,7 @@
 
     /* ------------------------------------------------------------ زر الرجوع ودليل اللعبة */
     .battle-back-button { top: 6px; left: 6px; width: 36px; height: 36px; font-size: 20px; }
+    .battle-screen-mode-button { top: 48px; right: 6px; width: 36px; height: 36px; }
 
     /* ------------------------------------------------------------ النوافذ المنبثقة */
     .attack-modal, .silence-modal, .card-info-modal,
@@ -744,10 +751,9 @@
     .battle-shop {
         padding: 6px 4px 8px;
     }
-    .battle-shop-header { font-size: 11px; }
-    .shop-choices { gap: 2px; margin: 4px 0; }
-    .battle-shop .shop-choice { min-height: 30px; padding: 2px 1px; font-size: 8px; }
-    .shop-close { font-size: 9px; }
+    .shop-choices { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin: 0 0 5px; }
+    .battle-shop .shop-choice { min-height: 32px; margin: 0; padding: 2px 1px; font-size: 7px; }
+    .battle-shop .shop-close { width: auto; min-height: 32px; font-size: 13px; }
 
     .battle-shop .bank-card span { font-size: 6px; }
     .battle-shop .bank-card small { font-size: 5px; }
@@ -967,7 +973,7 @@ html[lang="en"] .orientation-prompt [lang="ar"] {
 
     .bank-cards {
         display: grid;
-        flex: 1 1 0;
+        flex: 0 0 auto;
         grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
         grid-auto-flow: row;
         grid-auto-rows: max-content;

@@ -35,6 +35,8 @@
     const developerDeleteNotesButton = document.querySelector('#developer-delete-notes');
     const orientationLockButton = document.querySelector('#orientation-lock-button');
     const orientationLockError = document.querySelector('#orientation-lock-error');
+    const screenModeButton = document.querySelector('#battle-screen-mode-button');
+    const screenModeIcon = document.querySelector('#battle-screen-mode-icon');
 
     let mode = null;   // null | 'online' | 'ai'
     let developerContextClickTimer = null;
@@ -51,10 +53,22 @@
         if (!isPortrait) orientationLockError.hidden = true;
     }
 
+    function syncScreenModeButton() {
+        const isFullscreen = document.fullscreenElement === document.documentElement;
+        const lang = document.documentElement.getAttribute('lang') || 'en';
+        const label = isFullscreen
+            ? (lang === 'ar' ? 'الخروج من ملء الشاشة' : 'Exit fullscreen')
+            : (lang === 'ar' ? 'تفعيل ملء الشاشة' : 'Enter fullscreen');
+
+        screenModeIcon.textContent = isFullscreen ? 'fullscreen_exit' : 'fullscreen';
+        screenModeButton.setAttribute('aria-label', label);
+        screenModeButton.title = label;
+    }
+
     async function requestLandscapeMode() {
         const orientation = window.screen.orientation;
         const fullscreenElement = document.documentElement;
-        if (!fullscreenElement.requestFullscreen || !orientation?.lock) {
+        if (!fullscreenElement.requestFullscreen) {
             orientationLockError.hidden = false;
             return;
         }
@@ -63,12 +77,31 @@
             if (document.fullscreenElement !== fullscreenElement) {
                 await fullscreenElement.requestFullscreen();
             }
-            await orientation.lock('landscape');
-            orientationLockError.hidden = true;
+            if (orientation?.lock) {
+                await orientation.lock('landscape');
+                orientationLockError.hidden = true;
+            } else {
+                orientationLockError.hidden = window.innerHeight <= window.innerWidth;
+            }
         } catch (error) {
             orientationLockError.hidden = false;
             console.warn('Could not switch the game to landscape fullscreen.', error);
         }
+    }
+
+    async function toggleScreenMode() {
+        if (document.fullscreenElement === document.documentElement) {
+            try {
+                window.screen.orientation?.unlock?.();
+                await document.exitFullscreen();
+                orientationLockError.hidden = true;
+            } catch (error) {
+                console.warn('Could not exit game fullscreen.', error);
+            }
+            return;
+        }
+
+        await requestLandscapeMode();
     }
 
     function selectOnlineTeam(team) {
@@ -426,6 +459,7 @@
         },
 
         exitLandscapeMode() {
+            window.screen.orientation?.unlock?.();
             if (document.fullscreenElement === document.documentElement) {
                 document.exitFullscreen().catch((error) => {
                     console.warn('Could not exit game fullscreen.', error);
@@ -476,12 +510,21 @@
     developerLoginButton?.addEventListener('click', loadDeveloperNotes);
     developerDeleteNotesButton?.addEventListener('click', deleteDeveloperNotes);
     orientationLockButton?.addEventListener('click', requestLandscapeMode);
+    screenModeButton?.addEventListener('click', toggleScreenMode);
     window.addEventListener('resize', syncOrientationPrompt);
     window.addEventListener('orientationchange', syncOrientationPrompt);
     window.visualViewport?.addEventListener('resize', syncOrientationPrompt);
-    document.addEventListener('fullscreenchange', syncOrientationPrompt);
+    document.addEventListener('fullscreenchange', () => {
+        syncOrientationPrompt();
+        syncScreenModeButton();
+    });
     window.screen.orientation?.addEventListener?.('change', syncOrientationPrompt);
+    new MutationObserver(syncScreenModeButton).observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['lang']
+    });
     syncOrientationPrompt();
+    syncScreenModeButton();
     developerPasswordInput?.addEventListener('keydown', (event) => {
         if (event.key === 'Enter') loadDeveloperNotes();
     });
