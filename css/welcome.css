@@ -1,0 +1,200 @@
+/* شاشة الترحيب واختيار الوضع (ناس حقيقيون / الكمبيوتر) */
+.welcome-panel {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 30;
+    width: min(640px, 92vw);
+    padding: 30px 34px 34px;
+    text-align: center;
+    border: 2px solid var(--gold-primary);
+    border-radius: 6px;
+    background: linear-gradient(155deg, rgba(19, 24, 31, .97), rgba(8, 12, 18, .97));
+    box-shadow: 0 0 35px rgba(0, 0, 0, .9), inset 0 0 25px rgba(212, 175, 55, .12);
+}
+
+.welcome-panel h1 {
+    color: var(--gold-light);
+    font-size: clamp(28px, 4vw, 44px);
+    text-shadow: 0 2px 6px #000;
+}
+
+.game-mark {
+    display: grid;
+    place-items: center;
+    width: 58px;
+    aspect-ratio: 1;
+    margin: 0 auto 10px;
+    border: 2px solid var(--gold-primary);
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(214, 169, 72, .3) 0 50%, rgba(26, 30, 40, .9) 50% 100%);
+    color: var(--gold-light);
+    font-size: 34px;
+    line-height: 1;
+    text-shadow: 0 1px 5px #000;
+    box-shadow: 0 0 16px rgba(212, 175, 55, .25), inset 0 0 10px rgba(0, 0, 0, .65);
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+}
+
+.welcome-greeting {
+    margin-top: 12px;
+    color: #e7e7e7;
+    line-height: 1.8;
+    font-size: clamp(15px, 1.6vw, 19px);
+}
+
+.welcome-name-box {
+    display: grid;
+    gap: 10px;
+    margin-top: 22px;
+}
+
+.welcome-name-box label {
+    color: var(--gold-light);
+    font-size: 18px;
+}
+
+.welcome-name-box input {
+    width: min(100%, 420px);
+    margin: 0 auto;
+    padding: 14px 16px;
+    border: 1px solid var(--gold-primary);
+    border-radius: 8px;
+    background: rgba(8, 12, 18, .9);
+    color: #fff;
+    font-family: inherit;
+    font-size: 18px;
+    text-align: center;
+    outline: none;
+    user-select: text;
+}
+
+.welcome-name-box input:focus {
+    box-shadow: 0 0 0 2px rgba(212, 175, 55, .45);
+}
+
+.welcome-error {
+    color: #ff9b9b;
+    font-size: 15px;
+}
+
+.welcome-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    margin-top: 24px;
+}
+
+.welcome-actions .cta-button {
+    position: relative;
+    top: 0;
+    width: min(100%, 280px);
+    min-width: 220px;
+    min-height: 62px;
+    padding: 12px 48px;
+    border: 2px solid var(--gold-primary);
+    border-radius: 5px;
+    color: #fff;
+    font-family: var(--font-fantasy);
+    font-size: clamp(15px, 1.5vw, 19px);
+    font-weight: bold;
+    line-height: 1.35;
+    text-align: center;
+    text-shadow: 0 2px 3px rgba(0, 0, 0, .9);
+    cursor: pointer;
+    transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
+}
+
+.welcome-actions .cta-button::before {
+    position: absolute;
+    inset-inline-start: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Material Symbols Rounded';
+    font-size: 25px;
+    font-weight: 500;
+    line-height: 1;
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+}
+
+#challenge-humans {
+    background: linear-gradient(180deg, #2878a5, #123a5a);
+    box-shadow: 0 4px 0 #09283f, 0 0 18px rgba(0, 170, 255, .25);
+}
+
+#challenge-humans::before {
+    content: 'groups';
+}
+
+#challenge-computer {
+    background: linear-gradient(180deg, #a72b30, #541116);
+    box-shadow: 0 4px 0 #330b0e, 0 0 18px rgba(255, 34, 0, .22);
+}
+
+#challenge-computer::before {
+    content: 'smart_toy';
+}
+
+.welcome-actions .cta-button:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.12);
+}
+
+#challenge-humans:hover {
+    box-shadow: 0 6px 0 #09283f, 0 0 25px var(--blue-glow);
+}
+
+#challenge-computer:hover {
+    box-shadow: 0 6px 0 #330b0e, 0 0 24px var(--red-glow);
+}
+
+.welcome-actions .cta-button:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, .65);
+}
+
+.welcome-actions .cta-button:focus-visible {
+    outline: 3px solid var(--gold-light);
+    outline-offset: 4px;
+}
+
+@media (max-width: 480px) {
+    .welcome-actions {
+        gap: 14px;
+    }
+
+    .welcome-actions .cta-button {
+        width: min(100%, 320px);
+        min-width: 0;
+        min-height: 56px;
+        padding-inline: 46px;
+        font-size: 16px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .welcome-actions .cta-button {
+        transition: none;
+    }
+}
+
+/* شاشة اختيار الفريق/الخصم تتغيّر حسب الوضع */
+.selection-screen.mode-online .factions-container .cta-button {
+    display: none;            /* أونلاين: يُختار الفريق عند تحدي لاعب */
+}
+
+.selection-screen.mode-ai .online-lobby {
+    display: none;            /* الكمبيوتر: لا قائمة لاعبين */
+}
+
+.mode-back-button {
+    margin-inline-start: 10px;
+}
+
+/* إصلاح: زر الرجوع داخل المعركة كان مغطّى بشريط الفريق فلا يُنقر */
+.battle-back-button {
+    z-index: 20;
+}
