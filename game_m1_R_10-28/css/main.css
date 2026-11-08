@@ -1132,6 +1132,8 @@ html[lang="ar"] #challenge-team-modal .guide-content {
 .selection-screen.mode-ai .portrait-wrapper,
 .selection-screen.mode-online .portrait-wrapper {
     overflow: visible;
+    position: relative;
+    z-index: 61;
 }
 
 .selection-screen.mode-ai .ai-leader-choice .portrait-img,
@@ -1205,7 +1207,7 @@ html[lang="ar"] #challenge-team-modal .guide-content {
         justify-content: space-between;
         gap: clamp(28px, 6vw, 100px);
         padding-inline: clamp(28px, 6vw, 96px);
-        z-index: 61;
+        z-index: auto;
     }
 
     .selection-screen.mode-ai .faction-card,
