@@ -1,7 +1,7 @@
 // نظام الترجمة متعدد اللغات
 const translations = {
     en: {
-        title: "Faction Wars",
+        title: "Thrones of Dawn and Shadows",
         cards: {
             light: [
                 { name: "Fierce Falcon", description: "Stealth Protection: As long as it's alive in your field, it completely prevents the opponent from targeting the Light Healer card for attack. This card protects the Light Healer from direct attacks, making it safer to provide healing to allies." },
@@ -21,7 +21,7 @@ const translations = {
             ]
         },
         welcome: {
-            title: "Faction Wars",
+            title: "Thrones of Dawn and Shadows",
             greeting: "Welcome, warrior, to the battlefield between Light and Darkness! Add your name if you like, then choose who you want to face.",
             nameLabel: "What's your name?",
             namePlaceholder: "Enter your name here",
@@ -398,7 +398,7 @@ const translations = {
         },
         guide: {
             title: "Online Play Guide",
-            description: "This guide explains how to play <strong>Faction Wars</strong> online. The system automatically manages the match, turns, health, gold, market, and victory conditions.",
+            description: "This guide explains how to play <strong>Thrones of Dawn and Shadows</strong> online. The system automatically manages the match, turns, health, gold, market, and victory conditions.",
             start: "Starting the Match",
             start1: "Choose your team: <strong>Light Faction</strong> or <strong>Dark Faction</strong>.",
             start2: "Click join to start a new match or join an available opponent.",
@@ -456,7 +456,7 @@ const translations = {
         }
     },
     ar: {
-        title: "حرب الفصائل",
+        title: "عروش الفجر والظلال",
         cards: {
             light: [
                 { name: "الصقر الجارح", description: "حماية التخفي: طالما هو حي في ساحتك، يمنع الخصم تماماً من استهداف كرت معالجة النور بالهجوم. الكرت يحمي معالجة النور من الهجمات المباشرة مما يجعلها أكثر أماناً لتقديم العلاج للحلفاء." },
@@ -476,7 +476,7 @@ const translations = {
             ]
         },
         welcome: {
-            title: "حرب الفصائل",
+            title: "عروش الفجر والظلال",
             greeting: "مرحباً بك أيها المحارب في ساحة المعركة بين النور والظلام! اكتب اسمك إن رغبت، ثم اختر من تريد أن تواجه.",
             nameLabel: "ما اسمك؟",
             namePlaceholder: "اكتب اسمك هنا",
@@ -856,7 +856,7 @@ const translations = {
         },
         guide: {
             title: "دليل اللعب أونلاين",
-            description: "هذا الدليل يشرح طريقة لعب <strong>حرب الفصائل</strong> عبر الإنترنت. يتولى النظام تلقائياً إدارة المباراة، الجولات، الصحة، الذهب، السوق، والتحقق من شروط الفوز.",
+            description: "هذا الدليل يشرح طريقة لعب <strong>عروش الفجر والظلال</strong> عبر الإنترنت. يتولى النظام تلقائياً إدارة المباراة، الجولات، الصحة، الذهب، السوق، والتحقق من شروط الفوز.",
             start: "بدء المباراة",
             start1: "اختر فريقك: <strong>فريق النور</strong> أو <strong>فريق الظلام</strong>.",
             start2: "اضغط زر الانضمام لبدء مباراة جديدة أو للانضمام إلى خصم متصل.",
