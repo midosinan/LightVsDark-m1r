@@ -330,6 +330,7 @@ body {
     border-radius: 4px;
     position: relative;
     text-align: center;
+    
 }
 
 .header-banner h1 {
@@ -1204,6 +1205,7 @@ html[lang="ar"] #challenge-team-modal .guide-content {
         justify-content: space-between;
         gap: clamp(28px, 6vw, 100px);
         padding-inline: clamp(28px, 6vw, 96px);
+        z-index: 61;
     }
 
     .selection-screen.mode-ai .faction-card,
@@ -2814,3 +2816,4 @@ html[lang="ar"] #challenge-team-modal .guide-content {
     background: rgba(180, 30, 30, .95);
     box-shadow: 0 0 16px rgba(231, 76, 60, .6);
 }
+ 
